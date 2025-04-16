@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+title: Basilisk Coding Standards
+description: Comprehensive coding standards and structural guidelines for Basilisk-based CFD projects, ensuring consistency across simulation code, custom extensions, and test cases.
+globs: ["simulationCases/**/*.c", "src-local/**/*.h"]
+---
+
+## Purpose
+
+This document outlines the coding standards, project structure, and best practices for computational fluid dynamics simulations using the Basilisk framework. Following these standards ensures code readability, maintainability, and reproducibility across the CoMPhy Lab's research projects.
+
+## Project Structure
+
+- `basilisk/src/`: Core Basilisk CFD library (read-only).
+- `src-local/`: Custom headers extending Basilisk functionality.
+- `postProcess/`: Project-specific post-processing tools.
+- `simulationCases/`: Test cases with individual Makefiles.
+
+## Code Style
+
+- **Indentation**: 2 spaces (no tabs).
+- **Line Length**: Maximum 80 characters per line.
+- **Comments**: Use markdown in comments starting with `/**`; avoid bare `*` in comments.
+- **Spacing**: Include spaces after commas and around operators (`+`, `-`).
+- **File Organization**: 
+  - Place core functionality in `.h` headers
+  - Implement tests in `.c` files
+- **Naming Conventions**: 
+  - Use `snake_case` for variables and parameters
+  - Use `camelCase` for functions and methods
+- **Error Handling**: Return meaningful values and provide descriptive `stderr` messages.
+
+## Build & Test Commands
+
+**Standard Compilation**:
+
+```bash
+qcc -autolink file.c -o executable -lm
+```
+
+## Compilation with Custom Headers:
+
+```bash
+qcc -I$PWD/src-local -autolink file.c -o executable -lm
+```
+
+
+## Best Practices
+- Keep simulations modular and reusable
+- Document physical assumptions and numerical methods
+- Perform mesh refinement studies to ensure solution convergence
+- Include visualization scripts in the postProcess directory
