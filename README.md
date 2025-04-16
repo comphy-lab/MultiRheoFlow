@@ -1,25 +1,57 @@
-# Viscoelastic3D
+# RheoMultiFlow
 
-[![DOI](https://zenodo.org/badge/874384071.svg)](https://doi.org/10.5281/zenodo.14011692)
+_An extensible framework for multiphase flows with complex rheology, built on Basilisk C_
 
-This is the 3D extension of Basilisk C viscoelastic solver
+## Overview
+
+RheoMultiFlow is an open-source multiphase multirheology extension of the [ElastoFlow](https://github.com/comphy-lab/Viscoelastic3D/releases/tag/v2.5.1) solver. Here, we provide a catalogue of several models implemnented in [Basilisk C](http://basilisk.fr). Building upon Basilisk's powerful adaptive mesh capabilities, this framework enables high-fidelity simulations of non-Newtonian fluids and viscoelastic materials with free surfaces, interfaces, and capillary effects.
 
 
-## running the codes
+y the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the University of Twente, RheoMultiFlow provides a modular platform where different rheological constitutive equations can be seamlessly integrated with multiphase flow scenarios.
 
-There are two ways to run the codes:
+## Key Features
 
-1. Using the vanilla basilisk method:
+- **Diverse Rheology Models**: Simulates a wide spectrum of material behaviors:
+    - Newtonian fluids (done ✅)
+    - Viscoelastic fluids (Oldroyd-B - done ✅, Giesekus - good to have 🍀, FENE-P - urgent 📌)
+    - Yield-stress materials (Bingham - done ✅, Herschel-Bulkley - done ✅)
+    - Elastoviscoplastic materials (Saramito model - good to have 🍀)
 
-```shell
-qcc -O2 -Wall -disable-dimensions {NameOfFile}.c -o {NameOfFile} -lm 
-./{NameOfFile}
+- **Multiphase Capabilities**: Handles interfacial dynamics with: 
+    - Two-phase and multiphase flow support
+    - Accurate surface tension and capillary effects
+    - Interface tracking via Volume-of-Fluid method
+    - Large Density and viscosity contrasts
+
+- **High-Performance Computing**: Leverages Basilisk's advantages:
+    - Adaptive mesh refinement for computational efficiency
+    - Parallelization for large-scale simulations
+    - 2D, Axisymmetric, and 3D simulation capabilities
+
+- **Log-Conformation Method**: Ensures stability for highly elastic flows using advanced numerical techniques 
+
+## Test Cases
+
+RheoMultiFlow is particularly well-suited for simulating:
+
+
+## Installation
+
+```bash
+# Prerequisites: Basilisk installation (http://basilisk.fr)
+git clone https://github.com/comphy-lab/RheoMultiFlow.git
+cd RheoMultiFlow
+make
 ```
 
-2. Using the makefile (can be interactively run using bview browser):
+## Contributing
 
-```shell
-CFLAGS=-DDISPLAY=-1 make {NameOfFile}.tst
-```
+Contributions to RheoMultiFlow are welcome! Please see our [Contributing](Contributing.md) guide for details on how to submit code, report bugs, or request features.
 
-Check the localhost on {NameOfFile}/display.html. something like: [http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100](http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100) and run interactively.
+## License
+
+This project is licensed under the GNU GPLv3 License - see the [LICENSE](LICENSE) file for details, consistent with Basilisk's licensing.
+
+## Acknowledgments
+
+RheoMultiFlow builds upon ElastoFlow and the Basilisk C framework.
