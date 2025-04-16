@@ -18,7 +18,7 @@ assignees: ''
 ## Learning Objectives
 <!-- What concepts or techniques should this example help understand? -->
 
-## Relevance to Course
+## Relevance
 <!-- How does this connect to the course material or which section would it enhance? -->
 
 ## References
