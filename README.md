@@ -7,7 +7,7 @@ _An extensible framework for multiphase flows with complex rheology, built on Ba
 RheoMultiFlow is an open-source multiphase multirheology extension of the [ElastoFlow](https://github.com/comphy-lab/Viscoelastic3D/releases/tag/v2.5.1) solver. Here, we provide a catalogue of several models implemnented in [Basilisk C](http://basilisk.fr). Building upon Basilisk's powerful adaptive mesh capabilities, this framework enables high-fidelity simulations of non-Newtonian fluids and viscoelastic materials with free surfaces, interfaces, and capillary effects.
 
 
-y the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the University of Twente, RheoMultiFlow provides a modular platform where different rheological constitutive equations can be seamlessly integrated with multiphase flow scenarios.
+Developed at the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the University of Twente, RheoMultiFlow provides a modular platform where different rheological constitutive equations can be seamlessly integrated with multiphase flow scenarios.
 
 ## Key Features
 
@@ -35,14 +35,46 @@ y the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) a
 RheoMultiFlow is particularly well-suited for simulating:
 
 
-## Installation
+## Running the code
+
+### Install Basilisk. 
+
+- Follow the instructions [here](http://basilisk.fr/src/INSTALL) to install Basilisk. 
+- For MacOS and Linux (we have tested some but not all the different Linux distros), you can use the `reset_install_requirements.sh` script to install Basilisk. 
+- For Windows, we recommend using the Windows Subsystem for Linux (WSL). However, people have reported issues with this. If you find issues, please let us know. 
 
 ```bash
 # Prerequisites: Basilisk installation (http://basilisk.fr)
 git clone https://github.com/comphy-lab/RheoMultiFlow.git
 cd RheoMultiFlow
-make
+bash reset_install_requirements.sh --hard # use --hard to force the installation from scratch.
 ```
+
+### Compile the code
+
+#### Using makefile and visualization on the fly
+
+```bash
+cd simulationCases/
+CFLAGS=-DDISPLAY=-1 make caseToRun.tst
+```
+
+#### Using makefile but no visualization on the fly
+
+```bash
+cd simulationCases/
+make caseToRun.tst
+```
+
+#### Using bash script
+
+- Use the `run_case.sh` script to run a case. 
+
+```bash
+bash run_case.sh caseToRun # no display.
+```
+
+- Compile 
 
 ## Contributing
 
