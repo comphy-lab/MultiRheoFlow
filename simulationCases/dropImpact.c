@@ -99,6 +99,7 @@ event init (t = 0) {
    fraction (f, (1-R2(x,y,z)));
    foreach(){
     u.x[] = -f[]*1.0;
+    p[] = 2*f[];
    }
   }
 }
@@ -107,9 +108,12 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-  scalar KAPPA[];
+  scalar KAPPA[], trA[];
   curvature(f, KAPPA);
 #if dimension == 3
+  foreach(){
+    trA[] = A11[]+A22[]+A33[];
+  }
   adapt_wavelet ((scalar *){f, u.x, u.y, u.z, KAPPA},
       (double[]){fErr, VelErr, VelErr, VelErr, KErr},
       MAXlevel, 4);
@@ -125,6 +129,7 @@ event adapt(i++){
 ## Dumping snapshots
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
+  p.nodump = false;
   dump (file = dumpFile);
   sprintf (nameOut, "intermediate/snapshot-%5.4f", t);
   dump(file=nameOut);
