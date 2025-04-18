@@ -64,8 +64,8 @@ int main(int argc, char const *argv[]) {
   L0 = 4.0;
   
   // Values taken from the terminal
-  MAXlevel = 6;
-  tmax = 3.0;
+  MAXlevel = 8;
+  tmax = 4.0;
   We = 5.0;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;
@@ -107,9 +107,18 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-  adapt_wavelet ((scalar *){f, u.x, u.y, u.z},
-      (double[]){fErr, VelErr, VelErr, VelErr},
+  scalar KAPPA[];
+  curvature(f, KAPPA);
+#if dimension == 3
+  adapt_wavelet ((scalar *){f, u.x, u.y, u.z, KAPPA},
+      (double[]){fErr, VelErr, VelErr, VelErr, KErr},
       MAXlevel, 4);
+#else
+  adapt_wavelet ((scalar *){f, u.x, u.y, KAPPA},
+      (double[]){fErr, VelErr, VelErr, KErr},
+      MAXlevel, 4);
+#endif
+
 }
 
 /**
