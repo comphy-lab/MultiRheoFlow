@@ -6,27 +6,27 @@
  * @date Oct 18, 2024
 */
 
-// #include "axi.h"
-#include "grid/octree.h"
+#include "axi.h"
+// #include "grid/octree.h"
 // #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 
 #define VANILLA 0
 #if VANILLA
-#include "../src-local/log-conform-viscoelastic.h"
+#include "log-conform-viscoelastic.h"
 #define logFile "logAxi-vanilla.dat"
 #else
 #if AXI
-#include "../src-local/log-conform-viscoelastic-scalar-2D.h"
+#include "log-conform-viscoelastic-scalar-2D.h"
 #define logFile "logAxi-scalar.dat"
 #else
-#include "../src-local/log-conform-viscoelastic-scalar-3D.h"
+#include "log-conform-viscoelastic-scalar-3D.h"
 #define logFile "log3D-scalar.dat"
 #endif
 #endif
 
 #define FILTERED // Smear density and viscosity jumps
-#include "../src-local/two-phaseVE.h"
+#include "two-phaseVE.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"

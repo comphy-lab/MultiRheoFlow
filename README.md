@@ -1,4 +1,4 @@
-# RheoMultiFlow
+# MultiRheoFlow
 
 _An extensible framework for multiphase flows with complex rheology, built on Basilisk C_
 
@@ -20,8 +20,8 @@ Developed at the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-
 - **Multiphase Capabilities**: Handles interfacial dynamics with: 
     - Two-phase and multiphase flow support
     - Accurate surface tension and capillary effects
-    - Interface tracking via Volume-of-Fluid method
-    - Large Density and viscosity contrasts
+    - Interface capturing via Volume-of-Fluid method
+    - Arbitary Density and viscosity contrasts
 
 - **High-Performance Computing**: Leverages Basilisk's advantages:
     - Adaptive mesh refinement for computational efficiency
@@ -74,7 +74,23 @@ make caseToRun.tst
 bash run_case.sh caseToRun # no display.
 ```
 
-- Compile 
+- Compile and run from cli
+
+```bash
+qcc -O2 -Wall -disable-dimensions caseToRun.c -o caseToRun -lm
+./caseToRun
+```
+
+- Compile and run with MPI (MACOS)
+
+> Note: you should have OpenMPI installed. 
+
+```bash
+CC99='mpicc -std=c99 -D_GNU_SOURCE=1' qcc -Wall -O2 -D_MPI=1 -disable-dimensions caseToRun.c -o caseToRun -lm
+mpirun -np $NUM_PROCESSORS_TO_USE ./caseToRun
+```
+
+
 
 ## Contributing
 
