@@ -43,6 +43,8 @@ Utilize this meta-rule when:
 
 5. File Naming: Name the `.mdc` file using lowercase letters and hyphens (kebab-case), reflecting the rule's focus (e.g., `coding-standards.mdc`).
 
+6. Save files in .cursor/rules/
+
 ## Example Prompt
 
 "Using the Meta-Rule for Crafting Cursor Project Rules based on our conversation here, create a new rule that outlines the coding standards for header files, including indentation, naming conventions, and documentation practices."
