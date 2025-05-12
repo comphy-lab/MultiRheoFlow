@@ -25,11 +25,20 @@ jobs:
       run: |
         git clone https://github.com/comphy-lab/comphy-search.git
         mkdir -p docs/assets/js
-    
+
     - name: Copy search database
       run: |
+        # Validate the JSON file structure
+        if ! jq empty comphy-search/search_db.json; then
+          echo "Error: search_db.json is not a valid JSON file"
+          exit 1
+        fi
+        # Check if the file has the expected content structure
+        if ! jq 'has("version") and has("entries")' comphy-search/search_db.json | grep -q true; then
+          echo "Error: search_db.json doesn't have the expected structure"
+          exit 1
+        fi
         cp comphy-search/search_db.json docs/assets/js/search_db.json
-    
     - name: Commit and push changes directly (bypassing branch protection)
       run: |
         git config --local user.email "action@github.com"
