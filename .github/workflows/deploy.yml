@@ -3,7 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # or your default branch name
+      - main
+    paths:
+      - 'docs/**'  # Only trigger when docs directory changes
 
 permissions:
   contents: read
@@ -16,7 +18,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should-skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - id: check
+        name: Check if should skip
+        run: |
+          if git log -1 --pretty=%B | grep -q "\[skip-deploy\]"; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+
   deploy:
+    needs: check-skip
+    if: ${{ needs.check-skip.outputs.should-skip == 'false' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,7 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs'  # The directory containing your built HTML files
+          path: 'docs'  # Deploy the pre-built docs directory
 
       - name: Deploy to GitHub Pages
         id: deployment
