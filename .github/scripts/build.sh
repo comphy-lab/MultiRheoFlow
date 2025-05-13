@@ -39,6 +39,32 @@ function log_message() {
   echo "$(date +"%Y-%m-%d %H:%M:%S") - $1"
 }
 
+# Install required dependencies using a virtual environment
+if [ -f "$PROJECT_ROOT/.github/scripts/requirements.txt" ]; then
+  log_message "Setting up Python virtual environment..."
+
+  # Create a venv directory if it doesn't exist
+  VENV_DIR="$PROJECT_ROOT/.venv"
+
+  # Check if virtual environment already exists
+  if [ ! -d "$VENV_DIR" ]; then
+    python3 -m venv "$VENV_DIR"
+    log_message "Created new virtual environment in $VENV_DIR"
+  else
+    log_message "Using existing virtual environment in $VENV_DIR"
+  fi
+
+  # Activate the virtual environment
+  source "$VENV_DIR/bin/activate"
+
+  log_message "Installing Python dependencies in virtual environment..."
+  pip install --upgrade pip
+  pip install -r "$PROJECT_ROOT/.github/scripts/requirements.txt"
+
+  # Don't deactivate here - keep the environment active for subsequent Python calls
+  log_message "Dependencies installed successfully"
+fi
+
 # Run the documentation generation script
 log_message "Starting documentation generation..."
 if [ -n "$FORCE_REBUILD" ]; then
@@ -49,7 +75,7 @@ fi
 
 # Clean HTML files to remove empty anchor tags
 log_message "Cleaning HTML files to remove empty anchor tags..."
-python3 "$PROJECT_ROOT/.github/scripts/clean_html.py" --dir "$DOCS_DIR" --verbose
+python3 "$PROJECT_ROOT/.github/scripts/fix_empty_anchors.py" "$DOCS_DIR"
 
 if [ $? -ne 0 ]; then
     log_message "Documentation generation failed."

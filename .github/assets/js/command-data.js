@@ -208,8 +208,9 @@
       html += '<tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Command</th></tr>';
       
       sections[section].forEach(command => {
+        const sanitizedTitle = window.htmlSanitizer.escapeHTML(command.title);
         html += `<tr>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${command.icon} ${command.title}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${command.icon} ${sanitizedTitle}</td>
         </tr>`;
       });
       
