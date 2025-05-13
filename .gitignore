@@ -1,8 +1,8 @@
-testCases/pinchOff
-testCases/dropImpact
-testCases/src-local
-testCases/testEigenDecomposition
-testCases/dropAtomisation
+**/pinchOff
+**/dropImpact
+**/src-local
+**/testEigenDecomposition
+**/dropAtomisation
 **/*.s
 **/*.tests 
 **/*.deps
