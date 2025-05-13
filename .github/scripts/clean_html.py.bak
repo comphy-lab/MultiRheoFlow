@@ -9,8 +9,6 @@ during the documentation generation process.
 Relationship to fix_empty_anchors.py:
     - clean_html.py: Uses BeautifulSoup for robust HTML parsing and sanitization. It can handle 
       malformed or complex HTML structure, including script tags. Requires the bs4 dependency.
-      If BeautifulSoup is not available, falls back to using the same regex approach as 
-      fix_empty_anchors.py.
     - fix_empty_anchors.py: A lightweight alternative using regex-only approach without external 
       dependencies. It works faster but is less robust with malformed HTML.
 
@@ -21,7 +19,7 @@ When to use which script:
       or when installing external dependencies is not possible
 
 Dependencies:
-    - beautifulsoup4 (BSD-licensed HTML/XML parser) - Optional
+    - beautifulsoup4 (BSD-licensed HTML/XML parser)
     - Install with: pip install -r requirements.txt
 
 Usage:
@@ -33,21 +31,7 @@ import re
 import argparse
 import sys
 import html
-from html_cleaning_patterns import (
-    EMPTY_ANCHOR_PATTERNS,
-    SANITIZE_PATTERNS,
-    SANITIZE_REPLACEMENTS,
-    apply_empty_anchor_cleanup
-)
-
-# Check if BeautifulSoup is available
-HAS_BEAUTIFULSOUP = False
-try:
-    from bs4 import BeautifulSoup
-    HAS_BEAUTIFULSOUP = True
-except ImportError:
-    print("BeautifulSoup (bs4) not found. Falling back to regex-only approach.")
-    HAS_BEAUTIFULSOUP = False
+from bs4 import BeautifulSoup
 
 def sanitize_html(content):
     """
@@ -63,26 +47,29 @@ def sanitize_html(content):
         return ""
 
     # First apply regex removals on the raw content
-    sanitized_content = content
-    
-    # Apply all sanitization patterns from the shared module
-    for key, pattern in SANITIZE_PATTERNS.items():
-        replacement = SANITIZE_REPLACEMENTS[key]
-        sanitized_content = re.sub(pattern, replacement, sanitized_content, flags=re.IGNORECASE)
+    # Remove potentially harmful script and iframe tags
+    sanitized_content = re.sub(r'<\s*script', '&lt;script', content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*\/\s*script', '&lt;/script', sanitized_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*iframe', '&lt;iframe', sanitized_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*\/\s*iframe', '&lt;/iframe', sanitized_content, flags=re.IGNORECASE)
 
-    # Unescape first to prevent double-encoding from previous regex replacements
-    sanitized_content = html.unescape(sanitized_content)
-    
+    # Remove on* event handlers (e.g., onclick, onload)
+    sanitized_content = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', sanitized_content, flags=re.IGNORECASE)
+
+    # Remove javascript: URLs
+    sanitized_content = re.sub(r'javascript\s*:', 'disabled-javascript:', sanitized_content, flags=re.IGNORECASE)
+
     # Finally, escape any remaining HTML special characters
+    # This ensures we preserve the removals we already made
     sanitized_content = html.escape(sanitized_content, quote=False)  # Don't escape quotes again
 
     return sanitized_content
 
 def clean_html_file(file_path):
     """
-    Removes empty anchor tags from an HTML file.
-    Uses BeautifulSoup if available for robust handling of complex HTML,
-    or falls back to direct regex replacement if BeautifulSoup is not available.
+    Removes empty anchor tags from an HTML file using BeautifulSoup.
+    Also performs direct string replacement for HTML in script tags that
+    BeautifulSoup might not properly handle.
 
     Args:
         file_path: Path to the HTML file to clean
@@ -94,70 +81,71 @@ def clean_html_file(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Track initial length to estimate number of replacements
+        # First do a direct string replacement for empty anchor tags in the content
+        # This is more reliable for script tags where BeautifulSoup might struggle
         initial_content_length = len(content)
-        
-        if HAS_BEAUTIFULSOUP:
-            # BeautifulSoup approach - more robust but requires the dependency
-            
-            # First do a direct string replacement for empty anchor tags in the content
-            # This is more reliable for script tags where BeautifulSoup might struggle
-            content = apply_empty_anchor_cleanup(content)
+        pattern = r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*</a>'
+        content = re.sub(pattern, '', content)
 
-            # Parse the HTML with BeautifulSoup
-            soup = BeautifulSoup(content, 'html.parser')
+        # Also handle empty anchors with newlines between tags
+        pattern = r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*\n*\s*</a>'
+        content = re.sub(pattern, '', content)
 
-            # Find all empty anchor tags
-            empty_anchors = [a for a in soup.find_all('a') if not a.contents or (len(a.contents) == 1 and not a.contents[0].strip())]
+        # Count direct replacements
+        direct_replacements = (initial_content_length - len(content)) // 30  # Approximate count
 
-            # Count the empty anchors before removing
-            original_count = len(empty_anchors)
+        # Parse the HTML with BeautifulSoup
+        soup = BeautifulSoup(content, 'html.parser')
 
-            # Remove the empty anchors found by BeautifulSoup if any exist
-            for anchor in empty_anchors:
-                anchor.decompose()
+        # Find all empty anchor tags
+        empty_anchors = [a for a in soup.find_all('a') if not a.contents or (len(a.contents) == 1 and not a.contents[0].strip())]
 
-            # Special handling for script tags
-            script_tags = soup.find_all('script')
-            for script in script_tags:
-                # Clean script content if it exists
-                if script.string:
-                    # First apply regex to remove problematic anchor tags with all their variations
-                    script_content = script.string
-                    script_content = apply_empty_anchor_cleanup(script_content)
-                    
-                    # Sanitize javascript: URLs as a safety measure
-                    script_content = re.sub(SANITIZE_PATTERNS['javascript_urls'], 
-                                           SANITIZE_REPLACEMENTS['javascript_urls'], 
-                                           script_content, flags=re.IGNORECASE)
-                    
-                    # Update the script content
-                    script.string = script_content
+        # Count the empty anchors before removing
+        original_count = len(empty_anchors)
 
-            # Convert the soup back to HTML
-            cleaned_content = str(soup)
+        # Remove the empty anchors found by BeautifulSoup if any exist
+        for anchor in empty_anchors:
+            anchor.decompose()
 
-            # Perform a final direct replacement to catch any that might still remain
-            # (especially within attributes or other places BeautifulSoup might miss)
-            cleaned_content = apply_empty_anchor_cleanup(cleaned_content)
-            
-            # Approximate count of tags removed via regex
-            regex_replacements = (initial_content_length - len(content)) // 20
-            total_removed = original_count + regex_replacements
-            
-        else:
-            # Regex-only approach - faster but less robust
-            # Use the same approach as fix_empty_anchors.py for consistency
-            cleaned_content = apply_empty_anchor_cleanup(content)
-            
-            # Calculate approximate number of replacements
-            chars_removed = initial_content_length - len(cleaned_content)
-            total_removed = chars_removed // 20  # Approximate size of each anchor tag
+        # Special handling for script tags
+        script_tags = soup.find_all('script')
+        for script in script_tags:
+            # Clean script content if it exists
+            if script.string:
+                # Apply direct regex replacement within script content
+                script_content = script.string
+                script_content = re.sub(pattern, '', script_content)
+
+                # Apply direct regex removal of problematic anchor tags in script content
+                # This is more effective than trying to parse and modify the script with BeautifulSoup
+                # since the script content might already be sanitized/escaped
+                
+                # Remove empty anchor tags with various patterns
+                script_content = re.sub(r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*</a>', '', script_content)
+                script_content = re.sub(r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*\n*\s*</a>', '', script_content)
+                script_content = re.sub(r'<a\s+href=[\'"]?#[\'"]?\s*id=[\'"]?[\'"]?\s*>\s*</a>', '', script_content)
+                
+                # Sanitize javascript: URLs directly in the script
+                script_content = re.sub(r'javascript\s*:', 'disabled-javascript:', script_content, flags=re.IGNORECASE)
+                
+                # Directly use the cleaned script content
+                cleaned_script = script_content
+
+                # Update the script content
+                script.string = cleaned_script
+
+        # Convert the soup back to HTML
+        cleaned_content = str(soup)
+
+        # Perform a final direct replacement to catch any that might still remain
+        # (especially within attributes or other places BeautifulSoup might miss)
+        cleaned_content = re.sub(pattern, '', cleaned_content)
 
         # Write the cleaned content back to the file
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(cleaned_content)
 
+        total_removed = original_count + direct_replacements
         return True, total_removed
 
     except Exception as e:

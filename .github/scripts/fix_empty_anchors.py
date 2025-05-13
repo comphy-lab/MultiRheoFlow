@@ -10,8 +10,8 @@ Relationship to clean_html.py:
       with well-formed HTML where the empty anchor patterns are consistent. This script is ideal
       for quick cleanup or environments where installing dependencies is not possible.
     - clean_html.py: Uses BeautifulSoup for robust HTML parsing and sanitization. It can handle
-      malformed HTML, complex nested structures, and content within script tags. Requires the
-      beautifulsoup4 library.
+      malformed HTML, complex nested structures, and content within script tags. If BeautifulSoup
+      is not available, it falls back to the same regex approach used in this script.
 
 Trade-offs:
     - Speed: fix_empty_anchors.py is generally faster as it avoids DOM parsing
@@ -27,6 +27,7 @@ When to use which script:
 
 Dependencies:
     - None - relies only on standard library (re, os, glob)
+    - Uses shared patterns from html_cleaning_patterns.py if available
 
 Usage:
     python fix_empty_anchors.py [options] <path>
@@ -37,6 +38,46 @@ import re
 import os
 import glob
 import argparse
+
+# Try to import shared patterns, fall back to local patterns if not available
+try:
+    from html_cleaning_patterns import EMPTY_ANCHOR_PATTERNS, apply_empty_anchor_cleanup
+    USES_SHARED_PATTERNS = True
+except ImportError:
+    # If shared patterns aren't available, define patterns locally
+    USES_SHARED_PATTERNS = False
+    # Define patterns here for backwards compatibility
+    EMPTY_ANCHOR_PATTERNS = [
+        # Combined pattern for id and href attributes in either order with optional newlines
+        r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
+        r'(?i)<a\s+href=[\'"]?#[\'"]?\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
+        
+        # Single pattern for id attribute only with optional newlines
+        r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
+        
+        # Single pattern for href='#' only with optional newlines
+        r'(?i)<a\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
+        
+        # Combined pattern for unquoted attributes in either order
+        r'(?i)<a\s+(?:id=([^\s>]*)\s+href=#|href=#\s+id=([^\s>]*))\s*>\s*(?:\n\s*)*</a>'
+    ]
+    
+    # Implement apply_empty_anchor_cleanup locally for consistency
+    def apply_empty_anchor_cleanup(content):
+        """
+        Apply all empty anchor cleanup patterns to the content.
+        Local implementation for when the shared module is not available.
+        
+        Args:
+            content: HTML content to clean
+            
+        Returns:
+            str: Cleaned HTML content with empty anchors removed
+        """
+        result = content
+        for pattern in EMPTY_ANCHOR_PATTERNS:
+            result = re.sub(pattern, '', result)
+        return result
 
 def fix_html_file(file_path, verbose=False, dry_run=False):
     """
@@ -61,27 +102,16 @@ def fix_html_file(file_path, verbose=False, dry_run=False):
         if verbose:
             print(f"Processing file: {file_path}")
         
-        # Simplified patterns for empty anchor tags with proper attribute handling
-        # Using case-insensitive flag and combined patterns for efficiency
-        patterns = [
-            # Combined pattern for id and href attributes in either order with optional newlines
-            r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
-            r'(?i)<a\s+href=[\'"]?#[\'"]?\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
-            
-            # Single pattern for id attribute only with optional newlines
-            r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
-            
-            # Single pattern for href='#' only with optional newlines
-            r'(?i)<a\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
-            
-            # Combined pattern for unquoted attributes in either order
-            r'(?i)<a\s+(?:id=([^\s>]*)\s+href=#|href=#\s+id=([^\s>]*))\s*>\s*(?:\n\s*)*</a>'
-        ]
-        
-        # Apply all patterns
-        modified_content = content
-        for pattern in patterns:
-            modified_content = re.sub(pattern, '', modified_content)
+        # Apply anchor cleanup using shared patterns if available,
+        # or fall back to local implementation
+        if USES_SHARED_PATTERNS and 'apply_empty_anchor_cleanup' in globals():
+            # Use the imported shared function
+            modified_content = apply_empty_anchor_cleanup(content)
+        else:
+            # Apply all patterns directly
+            modified_content = content
+            for pattern in EMPTY_ANCHOR_PATTERNS:
+                modified_content = re.sub(pattern, '', modified_content)
 
         # Calculate approximate number of replacements
         final_content_length = len(modified_content)
