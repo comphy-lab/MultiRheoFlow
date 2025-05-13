@@ -208,17 +208,20 @@ function renderSections(sections, container) {
       // Create title element
       const titleEl = document.createElement('div');
       titleEl.className = 'command-palette-title';
-      titleEl.textContent = cmd.title;
-      
+      // Use our sanitizer to prevent XSS
+      window.htmlSanitizer.setTextContent(titleEl, cmd.title);
+
       // Build command element
       cmdEl.appendChild(iconEl);
       cmdEl.appendChild(titleEl);
-      
+
       // Add excerpt for search results if available
       if (cmd.excerpt) {
         const excerptEl = document.createElement('div');
         excerptEl.className = 'command-palette-excerpt';
-        excerptEl.textContent = cmd.excerpt.substring(0, 120) + (cmd.excerpt.length > 120 ? '...' : '');
+        // Use our sanitizer to prevent XSS
+        const excerptText = cmd.excerpt.substring(0, 120) + (cmd.excerpt.length > 120 ? '...' : '');
+        window.htmlSanitizer.setTextContent(excerptEl, excerptText);
         cmdEl.appendChild(excerptEl);
       }
       
