@@ -46,23 +46,24 @@ def sanitize_html(content):
     if not content:
         return ""
 
-    # Escape HTML special characters to prevent script execution
-    escaped_content = html.escape(content)
-
-    # Additional sanitization steps
+    # First apply regex removals on the raw content
     # Remove potentially harmful script and iframe tags
-    escaped_content = re.sub(r'<\s*script', '&lt;script', escaped_content, flags=re.IGNORECASE)
-    escaped_content = re.sub(r'<\s*\/\s*script', '&lt;/script', escaped_content, flags=re.IGNORECASE)
-    escaped_content = re.sub(r'<\s*iframe', '&lt;iframe', escaped_content, flags=re.IGNORECASE)
-    escaped_content = re.sub(r'<\s*\/\s*iframe', '&lt;/iframe', escaped_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*script', '&lt;script', content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*\/\s*script', '&lt;/script', sanitized_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*iframe', '&lt;iframe', sanitized_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'<\s*\/\s*iframe', '&lt;/iframe', sanitized_content, flags=re.IGNORECASE)
 
     # Remove on* event handlers (e.g., onclick, onload)
-    escaped_content = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', escaped_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', sanitized_content, flags=re.IGNORECASE)
 
     # Remove javascript: URLs
-    escaped_content = re.sub(r'javascript\s*:', 'disabled-javascript:', escaped_content, flags=re.IGNORECASE)
+    sanitized_content = re.sub(r'javascript\s*:', 'disabled-javascript:', sanitized_content, flags=re.IGNORECASE)
 
-    return escaped_content
+    # Finally, escape any remaining HTML special characters
+    # This ensures we preserve the removals we already made
+    sanitized_content = html.escape(sanitized_content, quote=False)  # Don't escape quotes again
+
+    return sanitized_content
 
 def clean_html_file(file_path):
     """
@@ -115,24 +116,20 @@ def clean_html_file(file_path):
                 script_content = script.string
                 script_content = re.sub(pattern, '', script_content)
 
-                # Sanitize the script content before parsing to prevent XSS vulnerabilities
-                # This prevents malicious script content from being executed when parsed by BeautifulSoup
-                # and eliminates potential security issues if the HTML content comes from untrusted sources
-                sanitized_content = sanitize_html(script_content)
-
-                # Create a temporary soup object for the sanitized script content
-                script_soup = BeautifulSoup(f"<div>{sanitized_content}</div>", 'html.parser')
-
-                # Find and remove any anchor tags in the script content
-                for anchor in script_soup.find_all('a'):
-                    anchor.decompose()
-
-                # Get the cleaned content (excluding the wrapping div)
-                cleaned_script = script_soup.div.decode_contents() if script_soup.div else ""
+                # Apply direct regex removal of problematic anchor tags in script content
+                # This is more effective than trying to parse and modify the script with BeautifulSoup
+                # since the script content might already be sanitized/escaped
                 
-                # Unescape HTML entities introduced during sanitization
-                # This ensures special characters are properly handled before setting the script content
-                cleaned_script = html.unescape(cleaned_script)
+                # Remove empty anchor tags with various patterns
+                script_content = re.sub(r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*</a>', '', script_content)
+                script_content = re.sub(r'<a\s+id=[\'"]?[\'"]?\s*href=[\'"]?#[\'"]?\s*>\s*\n*\s*</a>', '', script_content)
+                script_content = re.sub(r'<a\s+href=[\'"]?#[\'"]?\s*id=[\'"]?[\'"]?\s*>\s*</a>', '', script_content)
+                
+                # Sanitize javascript: URLs directly in the script
+                script_content = re.sub(r'javascript\s*:', 'disabled-javascript:', script_content, flags=re.IGNORECASE)
+                
+                # Directly use the cleaned script content
+                cleaned_script = script_content
 
                 # Update the script content
                 script.string = cleaned_script

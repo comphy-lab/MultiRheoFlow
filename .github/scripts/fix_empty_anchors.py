@@ -61,27 +61,21 @@ def fix_html_file(file_path, verbose=False, dry_run=False):
         if verbose:
             print(f"Processing file: {file_path}")
         
-        # Improved patterns for empty anchor tags with proper attribute handling
+        # Simplified patterns for empty anchor tags with proper attribute handling
+        # Using case-insensitive flag and combined patterns for efficiency
         patterns = [
-            # Handle id attribute followed by href attribute
-            r'<a\s+id=[\'"]?([^\s>]*)[\'"]?\s+href=[\'"]?#[\'"]?\s*>\s*</a>',
-            r'<a\s+id=[\'"]?([^\s>]*)[\'"]?\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
-
-            # Handle href attribute followed by id attribute
-            r'<a\s+href=[\'"]?#[\'"]?\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*</a>',
-            r'<a\s+href=[\'"]?#[\'"]?\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
-
-            # Handle only id attribute
-            r'<a\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*</a>',
-            r'<a\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
-
-            # Handle only href='#' attribute (empty links)
-            r'<a\s+href=[\'"]?#[\'"]?\s*>\s*</a>',
-            r'<a\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
-
-            # Handle unquoted attributes (not recommended but seen in some HTML)
-            r'<a\s+id=([^\s>]*)\s+href=#\s*>\s*</a>',
-            r'<a\s+href=#\s+id=([^\s>]*)\s*>\s*</a>'
+            # Combined pattern for id and href attributes in either order with optional newlines
+            r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
+            r'(?i)<a\s+href=[\'"]?#[\'"]?\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
+            
+            # Single pattern for id attribute only with optional newlines
+            r'(?i)<a\s+id=[\'"]?([^\s>]*)[\'"]?\s*>\s*(?:\n\s*)*</a>',
+            
+            # Single pattern for href='#' only with optional newlines
+            r'(?i)<a\s+href=[\'"]?#[\'"]?\s*>\s*(?:\n\s*)*</a>',
+            
+            # Combined pattern for unquoted attributes in either order
+            r'(?i)<a\s+(?:id=([^\s>]*)\s+href=#|href=#\s+id=([^\s>]*))\s*>\s*(?:\n\s*)*</a>'
         ]
         
         # Apply all patterns
