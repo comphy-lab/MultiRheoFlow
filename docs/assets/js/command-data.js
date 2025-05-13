@@ -339,7 +339,36 @@
             
             // Add clickable tag buttons
             tags.forEach(tag => {
-              html += `<button class="tag-filter-btn" style="padding: 8px 12px; background-color: #5b79a8; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px;">${tag}</button>`;
+              // Sanitize the tag text to prevent XSS
+              let sanitizedTag = '';
+              let escapedAttrValue = '';
+              
+              // Helper function for attribute value escaping (different from HTML content escaping)
+              const escapeAttrValue = (str) => {
+                return (str || '')
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#039;');
+              };
+              
+              if (window.htmlSanitizer && typeof window.htmlSanitizer.escapeHTML === 'function') {
+                sanitizedTag = window.htmlSanitizer.escapeHTML(tag);
+                escapedAttrValue = escapeAttrValue(tag);
+              } else {
+                // Basic HTML escaping fallback
+                sanitizedTag = (tag || '')
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#039;');
+                escapedAttrValue = sanitizedTag;
+              }
+              
+              // Create button with data-original-tag to help with tag matching
+              html += `<button class="tag-filter-btn" data-original-tag="${escapedAttrValue}" style="padding: 8px 12px; background-color: #5b79a8; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px;">${sanitizedTag}</button>`;
             });
             
             html += '</div>';
@@ -397,10 +426,13 @@
               });
               
               btn.addEventListener('click', () => {
+                // Store the original tag text (before sanitization) as a data attribute
+                // to ensure we can find the right tag even after sanitization
+                const originalTag = btn.getAttribute('data-original-tag') || btn.textContent;
+                
                 // Find the actual tag in the document and simulate a click on it
-                const tagText = btn.textContent;
                 const matchingTag = Array.from(document.querySelectorAll('tags span')).find(
-                  tag => tag.textContent === tagText
+                  tag => tag.textContent === originalTag
                 );
                 
                 if (matchingTag) {
