@@ -207,10 +207,79 @@
       html += '<table style="width: 100%; border-collapse: collapse;">';
       html += '<tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Command</th></tr>';
       
+      // Define a sanitizeIcon function within this scope
+      function sanitizeIcon(iconHtml) {
+        // Only allow these tags and attributes - same as in command-palette.js
+        const allowedTags = ['i', 'span', 'svg', 'path'];
+        const allowedAttrs = ['class', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'xmlns'];
+        
+        // Create a temporary element to parse the HTML
+        const temp = document.createElement('div');
+        temp.innerHTML = iconHtml;
+        
+        // Function to sanitize a node and its children
+        function sanitizeNode(node) {
+          // For element nodes
+          if (node.nodeType === 1) {
+            // If it's not an allowed tag, replace it with its text content
+            if (!allowedTags.includes(node.tagName.toLowerCase())) {
+              return document.createTextNode(node.textContent);
+            }
+            
+            // Remove any attributes that aren't allowed
+            Array.from(node.attributes).forEach(attr => {
+              if (!allowedAttrs.includes(attr.name.toLowerCase())) {
+                node.removeAttribute(attr.name);
+              }
+            });
+            
+            // Sanitize all child nodes
+            Array.from(node.childNodes).forEach(child => {
+              const sanitizedChild = sanitizeNode(child);
+              if (sanitizedChild !== child) {
+                node.replaceChild(sanitizedChild, child);
+              }
+            });
+          }
+          
+          return node;
+        }
+        
+        // Sanitize the temporary element and all its children
+        sanitizeNode(temp);
+        
+        // Return the sanitized HTML
+        return temp.innerHTML;
+      }
+      
       sections[section].forEach(command => {
-        const sanitizedTitle = window.htmlSanitizer.escapeHTML(command.title);
+        // Safely escape the title using the sanitizer if available
+        let sanitizedTitle = '';
+        if (window.htmlSanitizer && typeof window.htmlSanitizer.escapeHTML === 'function') {
+          sanitizedTitle = window.htmlSanitizer.escapeHTML(command.title);
+        } else {
+          // Basic HTML escaping fallback
+          sanitizedTitle = (command.title || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+        
+        let sanitizedIcon = '';
+        
+        // Only process icon if it exists
+        if (command.icon) {
+          // Validate it's a string and not empty
+          if (typeof command.icon === 'string' && command.icon.trim() !== '') {
+            // Sanitize the icon HTML
+            sanitizedIcon = sanitizeIcon(command.icon);
+          }
+        }
+        
         html += `<tr>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${command.icon} ${sanitizedTitle}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${sanitizedIcon} ${sanitizedTitle}</td>
         </tr>`;
       });
       

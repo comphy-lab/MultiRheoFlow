@@ -208,8 +208,13 @@ function renderSections(sections, container) {
       // Create title element
       const titleEl = document.createElement('div');
       titleEl.className = 'command-palette-title';
-      // Use our sanitizer to prevent XSS
-      window.htmlSanitizer.setTextContent(titleEl, cmd.title);
+      // Use our sanitizer to prevent XSS if available, otherwise set textContent directly
+      if (window.htmlSanitizer && typeof window.htmlSanitizer.setTextContent === 'function') {
+        window.htmlSanitizer.setTextContent(titleEl, cmd.title);
+      } else {
+        // Fallback to direct textContent setting if sanitizer is not available
+        titleEl.textContent = cmd.title || '';
+      }
 
       // Build command element
       cmdEl.appendChild(iconEl);
@@ -221,7 +226,15 @@ function renderSections(sections, container) {
         excerptEl.className = 'command-palette-excerpt';
         // Use our sanitizer to prevent XSS
         const excerptText = cmd.excerpt.substring(0, 120) + (cmd.excerpt.length > 120 ? '...' : '');
-        window.htmlSanitizer.setTextContent(excerptEl, excerptText);
+        
+        // Use our sanitizer to prevent XSS if available, otherwise set textContent directly
+        if (window.htmlSanitizer && typeof window.htmlSanitizer.setTextContent === 'function') {
+          window.htmlSanitizer.setTextContent(excerptEl, excerptText);
+        } else {
+          // Fallback to direct textContent setting if sanitizer is not available
+          excerptEl.textContent = excerptText || '';
+        }
+        
         cmdEl.appendChild(excerptEl);
       }
       

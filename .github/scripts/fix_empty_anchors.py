@@ -3,7 +3,30 @@
 Direct HTML Fix Script for Empty Anchors
 
 This script directly removes empty anchor tags from HTML files that cause JavaScript syntax errors.
-It uses pure string replacement instead of BeautifulSoup to be more reliable.
+It uses regex-based string replacement without external dependencies, making it fast and lightweight.
+
+Relationship to clean_html.py:
+    - fix_empty_anchors.py: Fast, dependency-free approach using regular expressions. Works best
+      with well-formed HTML where the empty anchor patterns are consistent. This script is ideal
+      for quick cleanup or environments where installing dependencies is not possible.
+    - clean_html.py: Uses BeautifulSoup for robust HTML parsing and sanitization. It can handle
+      malformed HTML, complex nested structures, and content within script tags. Requires the
+      beautifulsoup4 library.
+
+Trade-offs:
+    - Speed: fix_empty_anchors.py is generally faster as it avoids DOM parsing
+    - Robustness: clean_html.py is more robust for complex or malformed HTML
+    - Dependencies: fix_empty_anchors.py has no external dependencies
+    - Script Tag Handling: clean_html.py better handles anchors in script tags
+
+When to use which script:
+    - Use fix_empty_anchors.py for: quick fixes, CI/CD environments with limited dependencies,
+      well-formed HTML, performance-critical applications
+    - Use clean_html.py for: complex HTML documents, when sanitization is important, or when
+      working with HTML that may contain script tags with anchors
+
+Dependencies:
+    - None - relies only on standard library (re, os, glob)
 
 Usage:
     python fix_empty_anchors.py [options] <path>

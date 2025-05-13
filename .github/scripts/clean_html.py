@@ -6,6 +6,22 @@ This script removes empty anchor tags from HTML files that cause JavaScript synt
 It specifically targets tags like <a id="" href="#"></a> which are being incorrectly inserted
 during the documentation generation process.
 
+Relationship to fix_empty_anchors.py:
+    - clean_html.py: Uses BeautifulSoup for robust HTML parsing and sanitization. It can handle 
+      malformed or complex HTML structure, including script tags. Requires the bs4 dependency.
+    - fix_empty_anchors.py: A lightweight alternative using regex-only approach without external 
+      dependencies. It works faster but is less robust with malformed HTML.
+
+When to use which script:
+    - Use clean_html.py when dealing with complex HTML or when you need robust sanitization
+      (especially for HTML inside script tags)
+    - Use fix_empty_anchors.py when you need a fast, dependency-free solution for well-formed HTML
+      or when installing external dependencies is not possible
+
+Dependencies:
+    - beautifulsoup4 (BSD-licensed HTML/XML parser)
+    - Install with: pip install -r requirements.txt
+
 Usage:
     python clean_html.py --dir /path/to/html/files --verbose
 """
@@ -86,10 +102,7 @@ def clean_html_file(file_path):
         # Count the empty anchors before removing
         original_count = len(empty_anchors)
 
-        if original_count == 0 and direct_replacements == 0:
-            return False, 0
-
-        # Remove the empty anchors found by BeautifulSoup
+        # Remove the empty anchors found by BeautifulSoup if any exist
         for anchor in empty_anchors:
             anchor.decompose()
 
@@ -116,6 +129,10 @@ def clean_html_file(file_path):
 
                 # Get the cleaned content (excluding the wrapping div)
                 cleaned_script = script_soup.div.decode_contents() if script_soup.div else ""
+                
+                # Unescape HTML entities introduced during sanitization
+                # This ensures special characters are properly handled before setting the script content
+                cleaned_script = html.unescape(cleaned_script)
 
                 # Update the script content
                 script.string = cleaned_script
