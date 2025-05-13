@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <!-- 
+    IMPORTANT: DO NOT place empty anchor tags <a></a> in this template!
+    They cause JavaScript syntax errors when they appear inside script blocks.
+  -->
+  <!-- Eliminate FOUC (Flash of Unstyled Content) and FOUT (Flash of Incorrect Theme) -->
+  <script>
+    (function() {
+  try {
+    // Apply the theme as quickly as possible to avoid flash
+    let saved;
+    try {
+      saved = localStorage.getItem('theme');
+    } catch (storageError) {
+      // Handle localStorage access errors (private browsing, cookies disabled)
+      console.warn('Unable to access localStorage:', storageError);
+    }
+
+    let prefersDark = false;
+    try {
+      prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch (mediaError) {
+      // Handle matchMedia access errors (unsupported browsers)
+      console.warn('Unable to check media query:', mediaError);
+    }
+
+    const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+    // Add theme class for CSS targeting
+    document.documentElement.classList.add(theme + '-theme');
+    // Mark when theme is set for CSS transitions
+    document.documentElement.classList.add('theme-set');
+  } catch (error) {
+    // Fallback for any other unexpected errors
+    console.warn('Theme initialization failed:', error);
+    // Apply default theme as fallback
+    try {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.classList.add('theme-set');
+    } catch (fallbackError) {
+      // Silent catch for extreme cases
+      console.error('Critical theme fallback failed:', fallbackError);
+    }
+  }
+})();
+  </script>
+
+
+  <!-- No-JS fallback for theme and critical theming styles -->
+  <style>
+    /* Default light theme variables */
+    :root {
+      /* Base colors */
+      --color-background: #fff;
+      --color-text: #333;
+      --color-primary: #0066cc;
+      --color-secondary: #036;
+      --color-accent: #0099ff;
+
+      /* UI elements */
+      --color-header-bg: #f5f5f5;
+      --color-footer-bg: #2d2e33;
+      --color-border: #e0e0e0;
+      --color-input-bg: #f9f9f9;
+
+      /* Component colors */
+      --color-preloader-bg: #ffffff;
+      --color-loader: #0066cc;
+      --color-card-bg: #ffffff;
+      --color-code-bg: #f5f5f5;
+    }
+
+    /* Dark theme variables applied via media query when JS is disabled */
+    @media (prefers-color-scheme: dark) {
+      :root:not(.theme-set) {
+        /* Base colors - dark mode */
+        --color-background: #1a1a1a;
+        --color-text: #f5f5f5;
+        --color-primary: #4d9fff;
+        --color-secondary: #88ccff;
+        --color-accent: #00bfff;
+
+        /* UI elements - dark mode */
+        --color-header-bg: #121212;
+        --color-footer-bg: #121212;
+        --color-border: #333;
+        --color-input-bg: #2d2d2d;
+
+        /* Component colors - dark mode */
+        --color-preloader-bg: #1a1a1a;
+        --color-loader: #4d9fff;
+        --color-card-bg: #222;
+        --color-code-bg: #2d2d2d;
+      }
+    }
+
+    /* When JS sets the theme explicitly via data attribute */
+    [data-theme="dark"] {
+      /* Base colors - dark mode */
+      --color-background: #1a1a1a;
+      --color-text: #f5f5f5;
+      --color-primary: #4d9fff;
+      --color-secondary: #88ccff;
+      --color-accent: #00bfff;
+
+      /* UI elements - dark mode */
+      --color-header-bg: #121212;
+      --color-footer-bg: #121212;
+      --color-border: #333;
+      --color-input-bg: #2d2d2d;
+
+      /* Component colors - dark mode */
+      --color-preloader-bg: #1a1a1a;
+      --color-loader: #4d9fff;
+      --color-card-bg: #222;
+      --color-code-bg: #2d2d2d;
+    }
+
+    /* Prevent transition flashes during initial load */
+    html:not(.transitions-enabled) * {
+      transition: none !important;
+    }
+
+    /* Apply theme to preloader and early elements */
+    #preloader {
+      background-color: var(--color-preloader-bg);
+      color: var(--color-text);
+    }
+
+    #loader {
+      border-color: var(--color-loader);
+      border-top-color: transparent;
+    }
+
+    /* Noscript warning */
+    .noscript-warning {
+      background-color: var(--color-primary);
+      color: white;
+      text-align: center;
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    /* Theme indicator for no-JS */
+    .theme-indicator {
+      padding: 5px 10px;
+      border-radius: 4px;
+      background-color: var(--color-input-bg);
+      color: var(--color-text);
+      text-align: center;
+    }
+
+    /* Hide JS-only elements when no JS */
+    .no-js .js-only {
+      display: none !important;
+    }
+
+    /* Show no-JS alternatives */
+    .js .no-js-only {
+      display: none !important;
+    }
+  </style>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="base-url" content="..">
+  <title>simulationCases/testEigenDecomposition.c | MultiRheoFlow</title>
+
+  <!-- Critical CSS for fastest paint -->
+  <style>
+      .s-intro__title {
+          visibility: visible;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .s-header {
+          visibility: visible;
+      }
+
+      /* Ensure theme toggle properly styled immediately */
+      .theme-toggle {
+          background-color: var(--color-background);
+          color: var(--color-text);
+      }
+
+      /* Control SVG visibility based on theme */
+      [data-theme="dark"] .theme-toggle-icon.sun,
+      :root:not([data-theme="dark"]) .theme-toggle-icon.moon {
+          display: block;
+      }
+
+      [data-theme="dark"] .theme-toggle-icon.moon,
+      :root:not([data-theme="dark"]) .theme-toggle-icon.sun {
+          display: none;
+      }
+  </style>
+
+  <!-- Critical Meta Tags -->
+  <meta name="description" content="typedef struct { long double x, y, z; } pseudov3d; typedef struct { pseudov3d x, y, z; } pseudot3d; static void diagonalization3D(pseudov3d Lambda, pseudot3d...">
+  <meta name="author" content="CoMPhy Lab">
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="../src-local/eigen_decomposition.h, double, math.h, stdio.h, stdlib.h, struct, testeigendecomposition">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
+
+  <!-- Preload critical resources -->
+  <link rel="preload" href="../assets/js/main.js" as="script">
+  <link rel="preload" href="../assets/css/fontello/css/fontello.css" as="style">
+  <link rel="preload" href="../assets/css/academicons-1.7.0/css/academicons.min.css" as="style">
+
+  <!-- Base stylesheets -->
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/custom_styles.css">
+  <link rel="stylesheet" href="../assets/css/command-palette.css">
+  <link rel="stylesheet" href="../assets/css/fontello/css/fontello.css">
+  <link rel="stylesheet" href="../assets/css/academicons-1.7.0/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+  <!-- Font optimization -->
+  <style>
+      @font-face {
+          font-display: swap;
+          font-family: 'System Font';
+          src: local('system-ui');
+      }
+  </style>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="../assets/favicon/favicon-96x96.png">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon/favicon.svg">
+  <link rel="shortcut icon" href="../assets/favicon/favicon.ico">
+  <link rel="manifest" href="../assets/favicon/site.webmanifest">
+
+  <!-- Scripts with proper loading attributes -->
+  <script src="../assets/js/jquery.min.js"></script>
+  <script src="../assets/js/jquery-ui.packed.js"></script>
+  <script src="../assets/js/plots.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+  <!-- Config script must load before other scripts -->
+  <script src="../assets/js/config.js"></script>
+  <script defer src="../assets/js/html-sanitizer.js"></script>
+  <script defer src="../assets/js/search-helper.js"></script>
+  <script defer src="../assets/js/command-palette.js"></script>
+  <script defer src="../assets/js/command-data.js"></script>
+  <script defer src="../assets/js/main.js"></script>
+  <script defer src="../assets/js/theme-toggle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+
+  <!-- Optimize page load performance -->
+  <script>
+    // Preconnect to critical domains
+    const preconnectDomains = [
+      'https://cdnjs.cloudflare.com',
+      'https://cdn.jsdelivr.net'
+    ];
+
+    preconnectDomains.forEach(domain => {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = domain;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+
+      // Also add DNS prefetch as fallback
+      const dnsLink = document.createElement('link');
+      dnsLink.rel = 'dns-prefetch';
+      dnsLink.href = domain;
+      document.head.appendChild(dnsLink);
+    });
+
+    // Detect when document is fully loaded to remove preloader
+    window.addEventListener('load', function() {
+      const preloader = document.getElementById('preloader');
+      if (preloader) {
+        preloader.style.opacity = '0';
+        setTimeout(() => {
+          preloader.style.display = 'none';
+        }, 300); // Match transition duration
+      }
+    });
+  </script>
+
+  <script>
+      // Load Font Awesome with proper environment detection and fallbacks
+      function loadStylesheet(href) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.crossOrigin = 'anonymous';
+        link.onerror = (e) => {
+          console.error(`Failed to load stylesheet: `, e);
+          console.log('Trying alternative Font Awesome source...');
+        };
+        document.head.appendChild(link);
+        return link;
+      }
+
+      // Check if we're on localhost
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Use hardcoded version numbers for reliable loading
+
+        // Load Font Awesome using multiple CDNs to maximize reliability for local development
+        loadStylesheet('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css');
+        // Backup CDN if the first one fails
+        loadStylesheet('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css');
+        // Final local fallback - ensures it will work on any localhost environment
+        loadStylesheet('https://use.fontawesome.com/releases/v6.7.2/css/all.css');
+      } else {
+        // Use Kit for production with defer
+        var script = document.createElement('script');
+        script.src = 'https://kit.fontawesome.com/b1cfd9ca75.js';
+        script.crossOrigin = 'anonymous';
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    </script>
+
+  <script>
+      // Mark page as JS-enabled and manage transitions
+      document.documentElement.classList.remove('no-js');
+      document.documentElement.classList.add('js');
+
+      // Allow CSS transitions after initial load to prevent transition flashes
+      window.addEventListener('DOMContentLoaded', () => {
+          setTimeout(() => {
+              document.documentElement.classList.add('transitions-enabled');
+          }, 100); // Short delay to ensure DOM is ready
+      });
+  </script>
+</head>
+<body id="top">
+<script>window.repoName = "MultiRheoFlow";</script>
+
+
+    <!-- Preloader with theme variables applied -->
+    <div id="preloader">
+        <div id="loader"></div>
+    </div>
+
+    <noscript>
+        <div class="noscript-warning">
+            <p>This site works best with JavaScript enabled. Some features may be limited.</p>
+        </div>
+    </noscript>
+
+    <div id="page" class="s-pagewrap">
+        <header class="s-header">
+            <div class="s-header__logo">
+                <a class="logo" href="/">
+                    <img src="../assets/logos/CoMPhy-Lab-no-name.png" alt="CoMPhy Lab">
+                </a>
+                <a class="documentation-button" href="/MultiRheoFlow">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>MultiRheoFlow</span>
+                </a>
+            </div>
+            <a class="s-header__menu-toggle" href="#0">
+                <span class="s-header__menu-text">Menu</span>
+                <span class="s-header__menu-icon"></span>
+            </a>
+            <nav class="s-header__nav">
+                <a href="#0" class="s-header__nav-close-btn"><span>Close</span></a>
+                <ul class="s-header__nav-list">
+                    <li style="background: none;">
+                        <!-- JS theme toggle -->
+                        <div class="theme-toggle js-only" id="theme-toggle" aria-label="Toggle dark/light theme">
+                            <svg class="theme-toggle-icon moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                            <svg class="theme-toggle-icon sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        </div>
+                    </li>
+                    <li style="background: none;"><a href="https://scholar.google.com/citations?user=tHb_qZoAAAAJ&hl=en" style="background: none; padding: 0;" aria-label="Google Scholar Profile"><i class="ai ai-google-scholar" style="font-size: 1.75em;"></i></a></li>
+                    <li style="background: none;"><a href="https://github.com/comphy-lab" style="background: none; padding: 0;" aria-label="GitHub Organization"><i class="fa-brands fa-github" style="font-size: 1.75em"></i></a></li>
+                    <li><a href="https://comphy-lab.org/#about" class="smoothscroll">About</a></li>
+                    <li><a href="https://comphy-lab.org/team/">Team</a></li>
+                    <li><a href="https://comphy-lab.org/research">Research</a></li>
+                    <li><a href="https://comphy-lab.org/teaching">Teaching</a></li>
+                    <li><a href="https://comphy-lab.org/join">Join Us</a></li>
+                    <li><a href="https://blogs.comphy-lab.org/">Blog</a></li>
+                    <li style="background: none;"><a href="https://bsky.app/profile/comphy-lab.org" style="background: none; padding: 0;" aria-label="Bluesky Profile"><i class="fa-brands fa-bluesky" style="font-size: 1.75em; color: #0085ff;"></i></a></li>
+                    <!-- Command Palette Button (Styled like search) -->
+                    <li class="command-palette-button">
+                        <div class="command-wrapper">
+                            <button class="command-k-style-btn" id="command-palette-btn" aria-label="Open command palette">
+                                <span class="default-theme-text">ctrl K</span>
+                                <span class="mac-theme-text">⌘ K</span>
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            </button>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="content">
+
+            <div class="page-content">
+
+                                <h1 class="page-title">simulationCases/testEigenDecomposition.c</h1>
+
+
+                                <div class="raw-file-button-container">
+                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/simulationCases/testEigenDecomposition.c" class="raw-file-button" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-brands fa-github"></i> See raw file
+                    </a>
+                </div>
+
+                <p>#include &lt;stdio.h&gt; #include &lt;math.h&gt;
+                #include &lt;stdlib.h&gt; #include
+                “../src-local/eigen_decomposition.h”</p>
+                <p>#define EPSILON 1e-9 #define RELATIVE_TOLERANCE 1e-6
+                #define sq(x) ((x)*(x))</p>
+                <p>typedef struct { long double x, y, z; } pseudo_v3d;
+                typedef struct { pseudo_v3d x, y, z; } pseudo_t3d;</p>
+                <p>static void diagonalization_3D(pseudo_v3d* Lambda,
+                pseudo_t3d* R, pseudo_t3d* A) { // Check if the matrix
+                is already diagonal if (sq(A-&gt;x.y) + sq(A-&gt;x.z) +
+                sq(A-&gt;y.z) &lt; 1e-15) { R-&gt;x.x = R-&gt;y.y =
+                R-&gt;z.z = 1.; R-&gt;y.x = R-&gt;x.y = R-&gt;z.x =
+                R-&gt;x.z = R-&gt;z.y = R-&gt;y.z = 0.; Lambda-&gt;x =
+                A-&gt;x.x; Lambda-&gt;y = A-&gt;y.y; Lambda-&gt;z =
+                A-&gt;z.z; return; }</p>
+                <div class="code-block-container"><pre><code>// Compute eigenvalues using the eigen_decomposition function
+double matrix[3][3] = {
+    {A-&gt;x.x, A-&gt;x.y, A-&gt;x.z},
+    {A-&gt;x.y, A-&gt;y.y, A-&gt;y.z},
+    {A-&gt;x.z, A-&gt;y.z, A-&gt;z.z}
+};
+double eigenvectors[3][3];
+double eigenvalues[3];
+
+compute_eigensystem_symmetric_3x3(matrix, eigenvectors, eigenvalues);
+
+// Corrected: Store eigenvalues and eigenvectors with proper index mapping
+Lambda-&gt;x = eigenvalues[0];
+Lambda-&gt;y = eigenvalues[1];
+Lambda-&gt;z = eigenvalues[2];
+
+R-&gt;x.x = eigenvectors[0][0]; R-&gt;x.y = eigenvectors[0][1]; R-&gt;x.z = eigenvectors[0][2];
+R-&gt;y.x = eigenvectors[1][0]; R-&gt;y.y = eigenvectors[1][1]; R-&gt;y.z = eigenvectors[1][2];
+R-&gt;z.x = eigenvectors[2][0]; R-&gt;z.y = eigenvectors[2][1]; R-&gt;z.z = eigenvectors[2][2];</code></pre></div>
+                <p>}</p>
+                <p>// Helper function to print a pseudo_t3d void
+                print_pseudo_t3d(const char* name, const pseudo_t3d*
+                matrix) { printf(“%s:”, name); printf(“%12.9Lf %12.9Lf
+                %12.9Lf”, matrix-&gt;x.x, matrix-&gt;x.y,
+                matrix-&gt;x.z); printf(“%12.9Lf %12.9Lf %12.9Lf”,
+                matrix-&gt;y.x, matrix-&gt;y.y, matrix-&gt;y.z);
+                printf(“%12.9Lf %12.9Lf %12.9Lf”, matrix-&gt;z.x,
+                matrix-&gt;z.y, matrix-&gt;z.z); printf(“”); }</p>
+                <p>// Helper function to print a pseudo_v3d void
+                print_pseudo_v3d(const char* name, const pseudo_v3d*
+                vector) { printf(“%s: %12.9Lf %12.9Lf %12.9Lf”, name,
+                vector-&gt;x, vector-&gt;y, vector-&gt;z); }</p>
+                <p>// Function to verify the orthonormality of
+                eigenvectors int verify_orthonormality(const pseudo_t3d*
+                R) { for (int i = 0; i &lt; 3; i++) { long double norm =
+                sq(((long double<em>)R)[i]) + sq(((long
+                double</em>)R)[i+3]) + sq(((long double*)R)[i+6]); if
+                (fabsl(norm - 1.0L) &gt; EPSILON) { printf(“Eigenvector
+                %d is not normalized. Norm = %Lf”, i, sqrtl(norm));
+                return 0; }</p>
+                <div class="code-block-container"><pre><code>    for (int j = i + 1; j &lt; 3; j++) {
+        long double dot_product = ((long double*)R)[i] * ((long double*)R)[j] + 
+                                  ((long double*)R)[i+3] * ((long double*)R)[j+3] + 
+                                  ((long double*)R)[i+6] * ((long double*)R)[j+6];
+        if (fabsl(dot_product) &gt; EPSILON) {
+            printf(&quot;Eigenvectors %d and %d are not orthogonal. Dot product = %Lf\n&quot;, i, j, dot_product);
+            return 0;
+        }
+    }
+}
+return 1;</code></pre></div>
+                <p>}</p>
+                <p>// Function to verify the diagonalization int
+                verify_diagonalization(const pseudo_t3d* A, const
+                pseudo_t3d* R, const pseudo_v3d* Lambda) { pseudo_t3d
+                temp, diagonalized;</p>
+                <div class="code-block-container"><pre><code>// Compute R^T * A * R
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        ((long double*)&amp;temp)[i*3 + j] = 0;
+        for (int k = 0; k &lt; 3; k++) {
+            ((long double*)&amp;temp)[i*3 + j] += ((long double*)R)[k*3 + i] * ((long double*)A)[k*3 + j];
+        }
+    }
+}
+
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        ((long double*)&amp;diagonalized)[i*3 + j] = 0;
+        for (int k = 0; k &lt; 3; k++) {
+            ((long double*)&amp;diagonalized)[i*3 + j] += ((long double*)&amp;temp)[i*3 + k] * ((long double*)R)[k*3 + j];
+        }
+    }
+}
+
+// Print the diagonalized matrix
+print_pseudo_t3d(&quot;Diagonalized matrix: (R^T * A * R)&quot;, &amp;diagonalized);
+
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        if (i == j) {
+            long double relative_error = fabsl(((long double*)&amp;diagonalized)[i*3 + j] - ((long double*)Lambda)[i]) / 
+                                         (fabsl(((long double*)Lambda)[i]) + EPSILON);
+            if (relative_error &gt; RELATIVE_TOLERANCE) {
+                printf(&quot;Diagonal element (%d,%d) does not match eigenvalue. %Lf != %Lf (relative error: %Lf)\n&quot;, 
+                       i, j, ((long double*)&amp;diagonalized)[i*3 + j], ((long double*)Lambda)[i], relative_error);
+            }
+        } else {
+            if (fabsl(((long double*)&amp;diagonalized)[i*3 + j]) &gt; EPSILON) {
+                printf(&quot;Off-diagonal element (%d,%d) is not zero. Value = %Lf\n&quot;, 
+                       i, j, ((long double*)&amp;diagonalized)[i*3 + j]);
+            }
+        }
+    }
+}
+return 1;</code></pre></div>
+                <p>}</p>
+                <p>// Function to verify A * v = λ * v for each
+                eigenpair int verify_eigenpairs(const pseudo_t3d* A,
+                const pseudo_t3d* R, const pseudo_v3d* Lambda) {
+                printf(“Verifying A * v = λ * v for each eigenpair:”);
+                for (int i = 0; i &lt; 3; i++) { pseudo_v3d Av = {0},
+                lambda_v = {0};</p>
+                <div class="code-block-container"><pre><code>    // Compute A * v
+    for (int j = 0; j &lt; 3; j++) {
+        ((double*)&amp;Av)[j] = ((double*)A)[j*3] * ((double*)R)[i] + 
+                            ((double*)A)[j*3+1] * ((double*)R)[i+3] + 
+                            ((double*)A)[j*3+2] * ((double*)R)[i+6];
+    }
+
+    // Compute λ * v
+    for (int j = 0; j &lt; 3; j++) {
+        ((double*)&amp;lambda_v)[j] = ((double*)Lambda)[i] * ((double*)R)[i+j*3];
+    }
+
+    printf(&quot;Eigenpair %d:\n&quot;, i + 1);
+    printf(&quot;A * v = %8.4Lf %8.4Lf %8.4Lf\n&quot;, Av.x, Av.y, Av.z);
+    printf(&quot;λ * v = %8.4Lf %8.4Lf %8.4Lf\n&quot;, lambda_v.x, lambda_v.y, lambda_v.z);
+
+    // Check if A * v ≈ λ * v
+    for (int j = 0; j &lt; 3; j++) {
+        if (fabs(((double*)&amp;Av)[j] - ((double*)&amp;lambda_v)[j]) &gt; EPSILON) {
+            printf(&quot;Mismatch for eigenpair %d, component %d\n&quot;, i + 1, j + 1);
+        }
+    }
+    printf(&quot;Verification A * v = λ * v for each eigenpair done. See the messages above!\n\n&quot;);
+}
+return 1;</code></pre></div>
+                <p>}</p>
+                <p>// Main verification function int
+                verify_eigendecomposition(const pseudo_t3d* A, const
+                pseudo_t3d* R, const pseudo_v3d* Lambda) { if
+                (!verify_orthonormality(R)) { printf(“Eigenvectors are
+                not orthonormal.”); } else { printf(“Eigenvectors are
+                orthonormal.”); } printf(“”);</p>
+                <div class="code-block-container"><pre><code>if (!verify_diagonalization(A, R, Lambda)) {
+    printf(&quot;Matrix is not properly diagonalized.\n&quot;);
+} else {
+    printf(&quot;Matrix is properly diagonalized.\n&quot;);
+}
+
+if (!verify_eigenpairs(A, R, Lambda)) {
+    printf(&quot;Eigenpair verification failed.\n&quot;);
+} else {
+    printf(&quot;Eigenpair verification passed.\n&quot;);
+}
+
+printf(&quot;Eigendecomposition verification completed. See the messages above!\n&quot;);
+return 1;</code></pre></div>
+                <p>}</p>
+                <p>// verify A = R * Lambda * R^T int
+                verify_reconstruction(const pseudo_t3d* A, const
+                pseudo_t3d* R, const pseudo_v3d* Lambda) { pseudo_t3d
+                Lambda_diag, temp, A_reconstructed;</p>
+                <div class="code-block-container"><pre><code>// Create diagonal matrix from Lambda
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        ((long double*)&amp;Lambda_diag)[i*3 + j] = (i == j) ? ((long double*)Lambda)[i] : 0.0L;
+    }
+}
+
+// Compute R * Lambda
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        ((long double*)&amp;temp)[i*3 + j] = 0;
+        for (int k = 0; k &lt; 3; k++) {
+            ((long double*)&amp;temp)[i*3 + j] += ((long double*)R)[i*3 + k] * ((long double*)&amp;Lambda_diag)[k*3 + j];
+        }
+    }
+}
+
+// Compute (R * Lambda) * R^T
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        ((long double*)&amp;A_reconstructed)[i*3 + j] = 0;
+        for (int k = 0; k &lt; 3; k++) {
+            ((long double*)&amp;A_reconstructed)[i*3 + j] += ((long double*)&amp;temp)[i*3 + k] * ((long double*)R)[j*3 + k];
+        }
+    }
+}
+
+print_pseudo_t3d(&quot;Reconstructed A = R * Lambda * R^T&quot;, &amp;A_reconstructed);
+
+// Compare original A with reconstructed A
+for (int i = 0; i &lt; 3; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        long double diff = fabsl(((long double*)A)[i*3 + j] - ((long double*)&amp;A_reconstructed)[i*3 + j]);
+        if (diff &gt; EPSILON) {
+            printf(&quot;Mismatch at (%d,%d): original = %Lf, reconstructed = %Lf, difference = %Lf\n&quot;,
+                   i, j, ((long double*)A)[i*3 + j], ((long double*)&amp;A_reconstructed)[i*3 + j], diff);
+        }
+    }
+}
+
+printf(&quot;A = R * Lambda * R^T verification completed. See the messages above!\n&quot;);
+return 1;</code></pre></div>
+                <p>}</p>
+                <p>int main(int argc, char *argv[]) { pseudo_t3d A, R;
+                pseudo_v3d Lambda;</p>
+                <div class="code-block-container"><pre><code>// Initialize A with the given values
+
+/*
+this is a diagonal not I matrix
+
+
+// A.x.x = 1;  A.x.y = 0; A.x.z = 0;
+// A.y.x = 0; A.y.y = 2;  A.y.z = 0;
+// A.z.x = 0;  A.z.y = 0;  A.z.z = 3;
+/*
+this is a identity matrix
+*/
+// A.x.x = 1;  A.x.y = 0; A.x.z = 0;
+// A.y.x = 0; A.y.y = 1;  A.y.z = 0;
+// A.z.x = 0;  A.z.y = 0;  A.z.z = 1;
+/*
+this is a non-diagonal matrix
+*/
+// A.x.x = 1;  A.x.y = 2; A.x.z = 3;
+// A.y.x = 2; A.y.y = 4;  A.y.z = 5;
+// A.z.x = 3;  A.z.y = 5;  A.z.z = -6;
+/*
+this is a small matrix
+*/  
+// A.x.x = 1e-6;  A.x.y = 0; A.x.z = 0;
+// A.y.x = 0; A.y.y = 1e-12;  A.y.z = 0;
+// A.z.x = 0;  A.z.y = 0;  A.z.z = 1e-10;
+/*
+this is a large matrix
+*/
+// A.x.x = 100;  A.x.y = 100; A.x.z = 10;
+// A.y.x = 100; A.y.y = 10;  A.y.z = 1;
+// A.z.x = 10;  A.z.y = 1;  A.z.z = 0.1;
+if (argc != 7) {
+    A.x.x = 1;  A.x.y = 2; A.x.z = 3;
+    A.y.x = 2; A.y.y = 4;  A.y.z = 5;
+    A.z.x = 3;  A.z.y = 5;  A.z.z = -6;
+} else {
+    // get Aij from terminal 
+    A.x.x = atof(argv[1]);  A.x.y = atof(argv[2]); A.x.z = atof(argv[3]);
+    A.y.x = atof(argv[2]); A.y.y = atof(argv[4]);  A.y.z = atof(argv[5]);
+    A.z.x = atof(argv[3]);  A.z.y = atof(argv[5]);  A.z.z = atof(argv[6]);
+}
+print_pseudo_t3d(&quot;Original matrix A&quot;, &amp;A);
+diagonalization_3D(&amp;Lambda, &amp;R, &amp;A);
+print_pseudo_t3d(&quot;Eigenvectors R&quot;, &amp;R);
+print_pseudo_v3d(&quot;Eigenvalues Lambda&quot;, &amp;Lambda);
+verify_eigendecomposition(&amp;A, &amp;R, &amp;Lambda);
+// lastly check if A = R * Lambda * R^T
+verify_reconstruction(&amp;A, &amp;R, &amp;Lambda);
+return 0;</code></pre></div>
+                <p>}</p>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-left">
+              <a href="http://basilisk.fr/sandbox/vatsal/" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/logos/logoBasilisk_TransparentBackground.png" alt="Basilisk C" class="footer-logo">
+              </a>
+              <a href="https://pof.tnw.utwente.nl/" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/logos/LogoPof_transparent_white.png" alt="Physics of Fluids" class="footer-logo pof-logo">
+              </a>
+              <a href="https://www.utwente.nl/" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/logos/UT_Logo_2400_Sta_White_EN.png" alt="University of Twente" class="footer-logo">
+              </a>
+              <a href="https://www.vatsalsanjay.com/" target="_blank" rel="noopener noreferrer">
+                <img src="../assets/logos/Logo_Vatsal_v3_OutLine.png" alt="Vatsal Sanjay" class="footer-logo">
+              </a>
+            </div>
+            <div class="footer-center">
+              <p class="copyright-text">
+                &copy; Copyright<br>
+                CoMPhy Lab 2025
+              </p>
+            </div>
+            <div class="footer-right">
+              <a href="https://scholar.google.com/citations?user=tHb_qZoAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" aria-label="Google Scholar Profile">
+                <i class="ai ai-google-scholar" style="font-size: 2.5em; color: white;"></i>
+              </a>
+              <a href="https://github.com/comphy-lab" target="_blank" rel="noopener noreferrer" aria-label="GitHub Organization">
+                <i class="fa-brands fa-github" style="font-size: 2.5em; color: white;"></i>
+              </a>
+              <a href="https://www.youtube.com/@CoMPhyLab" target="_blank" rel="noopener noreferrer" aria-label="YouTube Channel">
+                <i class="fa-brands fa-youtube" style="font-size: 2.5em; color: white;"></i>
+              </a>
+              <a href="https://x.com/VatsalSanjay" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter) Profile">
+                <i class="fa-brands fa-x-twitter" style="font-size: 2.5em; color: white;"></i>
+              </a>
+              <a href="https://bsky.app/profile/comphy-lab.org" target="_blank" rel="noopener noreferrer" aria-label="Bluesky Profile">
+                <i class="fa-brands fa-bluesky" style="font-size: 2.5em; color: white;"></i>
+              </a>
+              <a href="https://github.com/comphy-lab/MultiRheoFlow" class="edit-link" aria-label="Edit this page on GitHub">
+                <i class="fa-brands fa-github"></i> Edit this page
+              </a>
+            </div>
+          </footer>
+    </div>  
+
+    <!-- Command Palette -->
+    <div id="simple-command-palette" class="simple-command-palette" style="display: none;">
+        <div class="simple-command-palette-backdrop"></div>
+        <div class="simple-command-palette-modal">
+            <input type="text" id="command-palette-input" placeholder="Type a command..." autocomplete="off">
+            <div id="command-palette-results" class="command-palette-results"></div>
+            <div class="command-palette-footer">
+                <span class="command-palette-footer-item"><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+                <span class="command-palette-footer-item"><kbd>enter</kbd> to select</span>
+                <span class="command-palette-footer-item"><kbd>esc</kbd> to close</span>
+            </div>
+        </div>
+    </div>
+
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    // Add copy button to each code block container
+    const codeBlocks = document.querySelectorAll('.code-block-container pre');
+    codeBlocks.forEach(function(codeBlock, index) {
+        // Create button element
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.setAttribute('aria-label', 'Copy code to clipboard');
+        button.setAttribute('data-copy-state', 'copy');
+        
+        // Get the code block container (parent of the pre)
+        const container = codeBlock.parentNode;
+        
+        // Add the button to the container
+        container.appendChild(button);
+        
+        // Set up click event
+        button.addEventListener('click', async function() {
+            const codeText = codeBlock.textContent;
+            
+            try {
+                // Try to use the modern clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(codeText);
+                    updateButtonState(button, 'success');
+                } else {
+                    // Fall back to the deprecated execCommand method
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeText;
+                    textarea.style.position = 'fixed';  // Prevent scrolling to the bottom
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    if (successful) {
+                        updateButtonState(button, 'success');
+                    } else {
+                        updateButtonState(button, 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('Copy failed:', err);
+                updateButtonState(button, 'error');
+            }
+        });
+    });
+    
+    // Function to update button state
+    function updateButtonState(button, state) {
+        if (state === 'success') {
+            button.textContent = 'Copied!';
+            button.classList.add('copied');
+        } else if (state === 'error') {
+            button.textContent = 'Error!';
+            button.classList.add('error');
+        }
+        
+        // Reset button state after 2 seconds
+        setTimeout(function() {
+            button.textContent = 'Copy';
+            button.classList.remove('copied', 'error');
+        }, 2000);
+    }
+});
+</script>
+        </body>
+</html>

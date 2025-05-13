@@ -4,9 +4,8 @@
 **/testEigenDecomposition
 **/dropAtomisation
 **/*.s
-**/*.tests 
+**/*.tests
 **/*.deps
-**/*.html
 **/*.tst
 
 CMakeLists.txt.user
