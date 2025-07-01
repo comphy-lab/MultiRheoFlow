@@ -1,22 +1,22 @@
 /** 
-# Log-Conformation Method for 3D Viscoelastic Fluids
+# Log-Conformation Method for 3D Elasto-viscoplastic Fluids
 
 ## Overview
-- **Title**: log-conform-viscoelastic-3D.h
-- **Version**: 2.6
-- **Description**: Implementation of the log-conformation method for viscoelastic fluids in 3D
+- **Title**: log-conform-elastoviscoplastic-3D.h
+- **Version**: 2.7
+- **Description**: Implementation of the log-conformation method for elasto-viscoplastic fluids in 3D
 
 ### Key Features
 1. Conformation tensor A exists across the domain and relaxes according to λ
 2. Stress acts according to elastic modulus G
-3. 3D implementation extending log-conform-viscoelastic-scalar-2D.h
+3. 3D implementation extending log-conform-elastoviscoplastic.h
 4. Eigenvalue clamping for numerical stability
 
 ### Author Information
-- **Name**: Vatsal Sanjay
+- **Name**: Vatsal Sanjay, Arivazhagan G. Balasubramanian (Ari)
 - **Email**: vatsalsanjay@gmail.com
 - **Institution**: Physics of Fluids
-- **Last Updated**: Mar 16, 2025
+- **Last Updated**: Jun 30, 2025
 
 ### Dependencies
 - bcg.h: Bell-Collela-Glaz scheme for advection
@@ -65,6 +65,9 @@
 - Added diagnostic capabilities
 - Fixed 3D velocity gradient calculation
 
+### v2.7 (Jun 30, 2025)
+- Added the plasticity based relaxation module (Saramito (2007) model)
+
 ## Implementation Notes
 1. The code extends the standard Basilisk log-conformation implementation
 2. Uses G-λ formulation for better physical interpretation
@@ -75,8 +78,8 @@
 ## Future Work
 ### Axisymmetric Compatibility
 - Currently not implemented
-- Use log-conform-viscoelastic-scalar-2D.h for axi cases
-- Or use log-conform-viscoelastic.h for better efficiency
+- Use log-conform-elastoviscoplastic-scalar-2D.h for axi cases
+- Or use log-conform-elastoviscoplastic.h for better efficiency
 
 ### Metric Terms Improvements
 - [ ] Enforce tensor compatibility using foreach_dimension
@@ -88,13 +91,13 @@
 #endif
 
 /**
-# The log-conformation method for some viscoelastic constitutive models
+# The log-conformation method for some elasto-viscoplastic constitutive models
 
 ## Introduction
 
-Viscoelastic fluids exhibit both viscous and elastic behaviour when
+Elasto-viscoplastic fluids exhibit viscous, elastic and plastic behaviour when
 subjected to deformation. Therefore these materials are governed by
-the Navier--Stokes equations enriched with an extra *elastic* stress
+the Navier--Stokes equations enriched with an extra stress
 $Tij$
 $$
 \rho\left[\partial_t\mathbf{u}+\nabla\cdot(\mathbf{u}\otimes\mathbf{u})\right] = 
@@ -103,12 +106,14 @@ $$
 $$
 where $\mathbf{D}=[\nabla\mathbf{u} + (\nabla\mathbf{u})^T]/2$ is the
 deformation tensor and $\mu_s$ is the solvent viscosity of the
-viscoelastic fluid.
+EVP fluid.
 
-The *polymeric* stress $\mathbf{T}$ represents memory effects due to
-the polymers. Several constitutive rheological models are available in
-the literature where the polymeric stress $\mathbf{T}$ is typically a 
-function $\mathbf{f_s}(\cdot)$ of the conformation tensor $\mathbf{A}$ such as
+The extra stress $\mathbf{T}$ includes memory effects due to the polymers and the 
+plasticity effects associated with internal structural changes in the material
+that constitutes to yielding the material and fluidizes it. Several constitutive 
+rheological models are available in the literature where the extra stress 
+$\mathbf{T}$ is typically a function $\mathbf{f_s}(\cdot)$ of the conformation 
+tensor $\mathbf{A}$ such as
 $$
 \mathbf{T} = G_p \mathbf{f_s}(\mathbf{A})
 $$
@@ -124,19 +129,24 @@ $$
 where $D_t$ denotes the material derivative and
 $\mathbf{f_r}(\cdot)$ is the relaxation function. Here, $\lambda$ is the relaxation time.
 
-In the case of an Oldroyd-B viscoelastic fluid, $\mathbf{f}_s
- (\mathbf{A}) = \mathbf{f}_r (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
+In the case of Saramito (2007) elasto-viscoplastic model, where the
+material before yielding is represented by Kelvin-Voigt viscoelastic solid and
+long after yielding recovers the Oldroyd-B type viscoelastic fluid behaviour,
+ $\mathbf{f}_s (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
+ $\mathbf{f}_r (\mathbf{A}) = \mathcal{F}(\mathbf{A} -\mathbf{I})$,
 and the above equations can be combined to avoid the use of
 $\mathbf{A}$
 $$
-\mathbf{T} + \lambda (D_t \mathbf{T} -
+(\mathcal{F}/\lambda) \mathbf{T} + (D_t \mathbf{T} -
 \mathbf{T} \cdot \nabla \mathbf{u} -
 \nabla \mathbf{u}^{T} \cdot \mathbf{T})  = 2 G_p\lambda \mathbf{D}
 $$
 
+Here, $\mathcal{F} = max(0., \frac{\|\tau_d\|-\tau_y}{\|\tau_d\|}$.
 [Comminal et al. (2015)](#comminal2015) gathered the functions
 $\mathbf{f}_s (\mathbf{A})$ and $\mathbf{f}_r (\mathbf{A})$ for
-different constitutive models.
+different viscoelastic constitutive models. This work is an extension
+of such formulation for elasto-viscoplastic materials.
 
 ## Parameters
 
@@ -151,17 +161,17 @@ Gp and lambda are defined in [two-phaseVE.h](two-phaseVE.h).
 /**
 ## The log conformation approach
 
-The numerical resolution of viscoelastic fluid problems often faces the
+The numerical resolution of viscoelastic and EVP fluid problems often faces the
 [High-Weissenberg Number
 Problem](http://www.ma.huji.ac.il/~razk/iWeb/My_Site/Research_files/Visco1.pdf). 
 This is a numerical instability appearing when strongly elastic flows
 create regions of high stress and fine features. This instability
 poses practical limits to the values of the relaxation time of the
-viscoelastic fluid, $\lambda$.  [Fattal \& Kupferman (2004,
+viscoelastic and EVP fluids, $\lambda$.  [Fattal \& Kupferman (2004,
 2005)](#fattal2004) identified the exponential nature of the solution
 as the origin of the instability. They proposed to use the logarithm
 of the conformation tensor $\Psi = \log \, \mathbf{A}$ rather than the
-viscoelastic stress tensor to circumvent the instability.
+extra stress tensor to circumvent the instability.
 
 The constitutive equation for the log of the conformation tensor is
 $$ 
@@ -204,10 +214,8 @@ polymeric stress tensor $\mathbf{T}$, by the strain function
 $\mathbf{f}_s (\mathbf{A})$
 $$ 
 \Psi = \log \, \mathbf{A} \quad \mathrm{and} \quad \mathbf{T} =
-\frac{G_p}{\lambda} \mathbf{f}_s (\mathbf{A})
+\frac{G_p}{\lambda} \mathbf{f}_s (\mathbf{A}).
 $$
-where $Tr$ denotes the trace of the tensor and $L$ is an additional
-property of the viscoelastic fluid.
 
 We will use the Bell--Collela--Glaz scheme to advect the log-conformation 
 tensor $\Psi$. */
@@ -227,6 +235,7 @@ static int eigenvalue_corrections = 0;
 
 (const) scalar Gp = unity; // elastic modulus
 (const) scalar lambda = unity; // relaxation time
+(const) scalar tau0 = unity; // yield-stress
 
 /*
 conformation tensor */
@@ -593,7 +602,9 @@ event tracer_advection(i++)
     $$
     */
 
-    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
+    double tauD = sqrt(0.25*(T11[] - T22[])*(T11[] - T22[]) + T12[]*T12[]);
+    double yieldFactor = max(0., (tauD - tau0[])/(tauD + 1e-6)); // $\mathcal{F}$
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
     
     A.x.y *= intFactor;
     foreach_dimension()
@@ -919,7 +930,10 @@ event tracer_advection(i++)
     A.z.z = Lambda.x * sq(R.z.x) + Lambda.y * sq(R.z.y) + Lambda.z * sq(R.z.z);
 
     // Apply relaxation using the relaxation time lambda
-    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
+
+    double tauD = sqrt((1./6.)*((T11[] - T22[])*(T11[] - T22[])+(T22[] - T33[])*(T22[] - T33[])+(T33[] - T11[])*(T33[] - T11[])) + 3.*(T12[]*T12[] + T23[]*T23[] + T13[]*T13[]));
+    double yieldFactor = max(0., (tauD - tau0[])/(tauD + 1e-6)); // $\mathcal{F}$
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
 
     A.x.y *= intFactor;
     A.y.x = A.x.y;
@@ -955,9 +969,9 @@ event tracer_advection(i++)
 #endif
 
 /**
-## Divergence of the viscoelastic stress tensor
+## Divergence of the extra stress tensor
 
-The viscoelastic stress tensor $\mathbf{T}$ is defined at cell centers,
+The extra stress tensor $\mathbf{T}$ is defined at cell centers,
 while the corresponding force (acceleration) is defined at cell faces. 
 For each component of the momentum equation, we need to compute the 
 divergence of the corresponding row of the stress tensor.
