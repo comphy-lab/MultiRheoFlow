@@ -919,7 +919,7 @@ event tracer_advection(i++)
     A.z.z = Lambda.x * sq(R.z.x) + Lambda.y * sq(R.z.y) + Lambda.z * sq(R.z.z);
 
     // Apply relaxation using the relaxation time lambda
-    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]) : 0.;
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
 
     A.x.y *= intFactor;
     A.y.x = A.x.y;

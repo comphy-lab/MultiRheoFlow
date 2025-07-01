@@ -933,7 +933,7 @@ event tracer_advection(i++)
 
     double tauD = sqrt((1./6.)*((T11[] - T22[])*(T11[] - T22[])+(T22[] - T33[])*(T22[] - T33[])+(T33[] - T11[])*(T33[] - T11[])) + 3.*(T12[]*T12[] + T23[]*T23[] + T13[]*T13[]));
     double yieldFactor = max(0., (tauD - tau0[])/(tauD + 1e-6)); // $\mathcal{F}$
-    double intFactor = lambda[] != 0. ? exp(-dt*yieldFactor/lambda[]) : 0.;
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
 
     A.x.y *= intFactor;
     A.y.x = A.x.y;
