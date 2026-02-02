@@ -1,105 +1,150 @@
 # MultiRheoFlow
 
-_An extensible framework for multiphase flows with complex rheology, built on Basilisk C_
+_An extensible framework for multiphase flows with complex rheology, built on
+Basilisk C_
 
 ## Overview
 
-RheoMultiFlow is an open-source multiphase multirheology extension of the [ElastoFlow](https://github.com/comphy-lab/Viscoelastic3D/releases/tag/v2.5.1) solver. Here, we provide a catalogue of several models implemnented in [Basilisk C](http://basilisk.fr). Building upon Basilisk's powerful adaptive mesh capabilities, this framework enables high-fidelity simulations of non-Newtonian fluids and viscoelastic materials with free surfaces, interfaces, and capillary effects.
+MultiRheoFlow is an open-source multiphase, multirheology extension of the
+[ElastoFlow](https://github.com/comphy-lab/Viscoelastic3D/releases/tag/v2.5.1)
+solver. It provides a catalogue of models implemented in
+[Basilisk C](https://basilisk.fr), leveraging adaptive mesh refinement for
+high-fidelity simulations of non-Newtonian fluids and viscoelastic materials
+with free surfaces, interfaces, and capillary effects.
 
-
-Developed at the [Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the University of Twente, RheoMultiFlow provides a modular platform where different rheological constitutive equations can be seamlessly integrated with multiphase flow scenarios.
+Developed at the
+[Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the
+University of Twente, MultiRheoFlow provides a modular platform where
+different rheological constitutive equations can be integrated with multiphase
+flow scenarios.
 
 ## Key Features
 
-- **Diverse Rheology Models**: Simulates a wide spectrum of material behaviors:
-    - Newtonian fluids (done ✅)
-    - Viscoelastic fluids (Oldroyd-B - done ✅, Giesekus - good to have 🍀, FENE-P - urgent 📌)
-    - Yield-stress materials (Bingham - done ✅, Herschel-Bulkley - done ✅)
-    - Elastoviscoplastic materials (Saramito model - good to have 🍀)
-
-- **Multiphase Capabilities**: Handles interfacial dynamics with: 
-    - Two-phase and multiphase flow support
-    - Accurate surface tension and capillary effects
-    - Interface capturing via Volume-of-Fluid method
-    - Arbitary Density and viscosity contrasts
-
+- **Diverse Rheology Models**: Simulates a wide spectrum of material
+  behaviors:
+  - Newtonian fluids (done ✅)
+  - Viscoelastic fluids (Oldroyd-B - done ✅, Giesekus - good to have 🍀,
+    FENE-P - urgent 📌)
+  - Yield-stress materials (Bingham - done ✅, Herschel-Bulkley - done ✅)
+  - Elastoviscoplastic materials (Saramito model - good to have 🍀)
+- **Multiphase Capabilities**: Handles interfacial dynamics with:
+  - Two-phase and multiphase flow support
+  - Accurate surface tension and capillary effects
+  - Interface capturing via the volume-of-fluid method
+  - Arbitrary density and viscosity contrasts
 - **High-Performance Computing**: Leverages Basilisk's advantages:
-    - Adaptive mesh refinement for computational efficiency
-    - Parallelization for large-scale simulations
-    - 2D, Axisymmetric, and 3D simulation capabilities
-
-- **Log-Conformation Method**: Ensures stability for highly elastic flows using advanced numerical techniques 
+  - Adaptive mesh refinement for computational efficiency
+  - Parallelization for large-scale simulations
+  - 2D, axisymmetric, and 3D simulation capabilities
+- **Log-Conformation Method**: Ensures stability for highly elastic flows
+  using advanced numerical techniques
 
 ## Test Cases
 
-RheoMultiFlow is particularly well-suited for simulating:
+- `simulationCases/dropImpact.c`
+- `simulationCases/dropAtomisation.c`
+- `simulationCases/pinchOff.c`
+- `simulationCases/testEigenDecomposition.c`
+- Parameter files such as `simulationCases/Bo0.0010.dat`
 
+## Repository Structure
 
-## Running the code
+- `src-local/`: Project-specific Basilisk headers and helpers.
+- `simulationCases/`: Simulation entry points and case utilities.
+- `postProcess/`: Post-processing and visualization tools.
+- `.github/`: Documentation and CI tooling (generated docs go to
+  `.github/docs/`).
+- Root scripts such as `reset_install_requirements.sh`.
 
-### Install Basilisk. 
+## Running the Code
 
-- Follow the instructions [here](http://basilisk.fr/src/INSTALL) to install Basilisk. 
-- For MacOS and Linux (we have tested some but not all the different Linux distros), you can use the `reset_install_requirements.sh` script to install Basilisk. 
-- For Windows, we recommend using the Windows Subsystem for Linux (WSL). However, people have reported issues with this. If you find issues, please let us know. 
+### Install Basilisk
+
+- Follow the instructions [here](http://basilisk.fr/src/INSTALL).
+- For macOS and Linux, you can use `reset_install_requirements.sh`.
+- For Windows, we recommend using WSL; please report any issues you find.
 
 ```bash
 # Prerequisites: Basilisk installation (http://basilisk.fr)
 git clone https://github.com/comphy-lab/RheoMultiFlow.git
 cd RheoMultiFlow
-bash reset_install_requirements.sh --hard # use --hard to force the installation from scratch.
+curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-01-29 --hard
 ```
 
-### Compile the code
+Update `v2026-01-29` with the latest version.
 
-#### Using makefile and visualization on the fly
+### Compile a Case with Make
 
 ```bash
-cd simulationCases/
-CFLAGS=-DDISPLAY=-1 make caseToRun.tst
+cd simulationCases
+make dropImpact.tst
 ```
 
-#### Using makefile but no visualization on the fly
+To disable on-the-fly visualization:
 
 ```bash
-cd simulationCases/
-make caseToRun.tst
+cd simulationCases
+CFLAGS=-DDISPLAY=-1 make dropImpact.tst
 ```
 
-#### Using bash script
-
-- Use the `run_case.sh` script to run a case. 
+### Run via Helper Scripts
 
 ```bash
-bash run_case.sh caseToRun # no display.
+cd simulationCases
+bash runCases.sh dropImpact
+bash cleanup.sh dropImpact
 ```
 
-- Compile and run from cli
+### Compile and Run from CLI
 
 ```bash
-qcc -O2 -Wall -disable-dimensions caseToRun.c -o caseToRun -lm
-./caseToRun
+qcc -O2 -Wall -disable-dimensions -I$PWD/src-local \
+  simulationCases/dropImpact.c -o dropImpact -lm
+./dropImpact
 ```
 
-- Compile and run with MPI (MACOS)
+### Compile and Run with MPI (macOS)
 
-> Note: you should have OpenMPI installed. 
+> Note: you should have OpenMPI installed.
 
 ```bash
-CC99='mpicc -std=c99 -D_GNU_SOURCE=1' qcc -Wall -O2 -D_MPI=1 -disable-dimensions caseToRun.c -o caseToRun -lm
-mpirun -np $NUM_PROCESSORS_TO_USE ./caseToRun
+CC99='mpicc -std=c99 -D_GNU_SOURCE=1' qcc -Wall -O2 -D_MPI=1 \
+  -disable-dimensions -I$PWD/src-local simulationCases/dropImpact.c \
+  -o dropImpact -lm
+mpirun -np $NUM_PROCESSORS_TO_USE ./dropImpact
 ```
 
+## Post-Processing
 
+- `postProcess/VideoAxi.py`
+- `postProcess/getData-elastic-scalar2D.c`
+- `postProcess/getFacet2D.c`
+
+## Documentation
+
+Generate the documentation locally:
+
+```bash
+.github/scripts/build.sh
+```
+
+Preview locally:
+
+```bash
+.github/scripts/deploy.sh
+```
 
 ## Contributing
 
-Contributions to RheoMultiFlow are welcome! Please see our [Contributing](Contributing.md) guide for details on how to submit code, report bugs, or request features.
+Contributions to MultiRheoFlow are welcome! Please see our
+[Contributing](Contributing.md) guide for details on how to submit code,
+report bugs, or request features.
 
 ## License
 
-This project is licensed under the GNU GPLv3 License - see the [LICENSE](LICENSE) file for details, consistent with Basilisk's licensing.
+This project is licensed under the GNU GPLv3 License. See the
+[LICENSE](LICENSE) file for details, consistent with Basilisk's licensing.
 
 ## Acknowledgments
 
-RheoMultiFlow builds upon ElastoFlow and the Basilisk C framework.
+MultiRheoFlow builds upon ElastoFlow and the Basilisk C framework.
