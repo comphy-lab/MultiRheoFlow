@@ -1,15 +1,24 @@
+/**
+# Symmetric 3x3 Eigen-Decomposition
+
+Householder tridiagonalization and QL iteration for symmetric
+3x3 matrices.
+*/
 #define SQUARE(x) ((x)*(x))
 
 /**
- * @brief Tridiagonalize a 3x3 symmetric matrix using the Householder method.
- * 
- * This function reduces a 3x3 symmetric matrix A to tridiagonal form.
- * 
- * @param[in]  matrix        Input 3x3 symmetric matrix
- * @param[out] eigenvectors  Orthogonal matrix of Householder vectors
- * @param[out] diagonal      Diagonal elements of the tridiagonal matrix
- * @param[out] subdiagonal   Subdiagonal elements of the tridiagonal matrix
- */
+### tridiagonalize_symmetric_3x3()
+
+Reduces a symmetric 3x3 matrix to tridiagonal form using the
+Householder method.
+
+#### Parameters
+
+- `matrix`: Input symmetric matrix.
+- `eigenvectors`: Orthogonal Householder vectors.
+- `diagonal`: Diagonal entries of the tridiagonal matrix.
+- `subdiagonal`: Subdiagonal entries of the tridiagonal matrix.
+*/
 static void tridiagonalize_symmetric_3x3(double matrix[3][3], double eigenvectors[3][3], 
                                          double diagonal[3], double subdiagonal[2])
 {
@@ -66,16 +75,22 @@ static void tridiagonalize_symmetric_3x3(double matrix[3][3], double eigenvector
 }
 
 /**
- * @brief Compute eigenvalues and eigenvectors of a 3x3 symmetric matrix.
- * 
- * This function calculates the eigenvalues and eigenvectors of a 3x3 symmetric matrix
- * using the QL algorithm with implicit shifts.
- * 
- * @param[in]  matrix        Input 3x3 symmetric matrix
- * @param[out] eigenvectors  Matrix of eigenvectors (column-wise)
- * @param[out] eigenvalues   Array of eigenvalues
- * @return                   0 if successful, -1 if the algorithm fails to converge
- */
+### compute_eigensystem_symmetric_3x3()
+
+Computes eigenvalues and eigenvectors of a symmetric 3x3 matrix using
+the QL algorithm with implicit shifts.
+
+#### Parameters
+
+- `matrix`: Input symmetric matrix.
+- `eigenvectors`: Eigenvector matrix (column-wise).
+- `eigenvalues`: Output eigenvalues.
+
+#### Returns
+
+- `0` on success.
+- `-1` if the iteration fails to converge.
+*/
 static int compute_eigensystem_symmetric_3x3(double matrix[3][3], double eigenvectors[3][3], double eigenvalues[3])
 {
     const int size = 3;
