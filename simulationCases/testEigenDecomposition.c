@@ -1,3 +1,16 @@
+/**
+# Eigen-Decomposition Test (3x3 Symmetric)
+
+Validates `compute_eigensystem_symmetric_3x3()` using diagnostic
+checks for orthonormality, diagonalization, and reconstruction.
+
+## Usage
+
+`./testEigenDecomposition a11 a12 a13 a22 a23 a33`
+
+If no arguments are provided, a default test matrix is used.
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -10,7 +23,14 @@
 typedef struct { long double x, y, z; } pseudo_v3d;
 typedef struct { pseudo_v3d x, y, z; } pseudo_t3d;
 
-static void diagonalization_3D(pseudo_v3d* Lambda, pseudo_t3d* R, pseudo_t3d* A)
+/**
+### diagonalization_3D()
+
+Wrapper around `compute_eigensystem_symmetric_3x3()` that fills
+`Lambda` and `R` for the test structures.
+*/
+static void diagonalization_3D(pseudo_v3d* Lambda, pseudo_t3d* R,
+                               pseudo_t3d* A)
 {
     // Check if the matrix is already diagonal
     if (sq(A->x.y) + sq(A->x.z) + sq(A->y.z) < 1e-15) {
@@ -41,7 +61,11 @@ static void diagonalization_3D(pseudo_v3d* Lambda, pseudo_t3d* R, pseudo_t3d* A)
     R->z.x = eigenvectors[2][0]; R->z.y = eigenvectors[2][1]; R->z.z = eigenvectors[2][2];
 }
 
-// Helper function to print a pseudo_t3d
+/**
+### print_pseudo_t3d()
+
+Prints a 3x3 tensor in row-major form.
+*/
 void print_pseudo_t3d(const char* name, const pseudo_t3d* matrix) {
     printf("%s:\n", name);
     printf("%12.9Lf %12.9Lf %12.9Lf\n", matrix->x.x, matrix->x.y, matrix->x.z);
@@ -50,12 +74,20 @@ void print_pseudo_t3d(const char* name, const pseudo_t3d* matrix) {
     printf("\n");
 }
 
-// Helper function to print a pseudo_v3d
+/**
+### print_pseudo_v3d()
+
+Prints a 3-vector.
+*/
 void print_pseudo_v3d(const char* name, const pseudo_v3d* vector) {
     printf("%s: %12.9Lf %12.9Lf %12.9Lf\n\n", name, vector->x, vector->y, vector->z);
 }
 
-// Function to verify the orthonormality of eigenvectors
+/**
+### verify_orthonormality()
+
+Checks that eigenvectors are unit length and mutually orthogonal.
+*/
 int verify_orthonormality(const pseudo_t3d* R) {
     for (int i = 0; i < 3; i++) {
         long double norm = sq(((long double*)R)[i]) + sq(((long double*)R)[i+3]) + sq(((long double*)R)[i+6]);
@@ -77,7 +109,11 @@ int verify_orthonormality(const pseudo_t3d* R) {
     return 1;
 }
 
-// Function to verify the diagonalization
+/**
+### verify_diagonalization()
+
+Checks that `R^T * A * R` is diagonal with the provided eigenvalues.
+*/
 int verify_diagonalization(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d* Lambda) {
     pseudo_t3d temp, diagonalized;
     
@@ -123,7 +159,11 @@ int verify_diagonalization(const pseudo_t3d* A, const pseudo_t3d* R, const pseud
     return 1;
 }
 
-// Function to verify A * v = λ * v for each eigenpair
+/**
+### verify_eigenpairs()
+
+Checks `A * v = lambda * v` for each eigenpair.
+*/
 int verify_eigenpairs(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d* Lambda) {
     printf("Verifying A * v = λ * v for each eigenpair:\n");
     for (int i = 0; i < 3; i++) {
@@ -156,7 +196,11 @@ int verify_eigenpairs(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d
     return 1;
 }
 
-// Main verification function
+/**
+### verify_eigendecomposition()
+
+Runs orthonormality, diagonalization, and eigenpair checks.
+*/
 int verify_eigendecomposition(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d* Lambda) {
     if (!verify_orthonormality(R)) {
         printf("Eigenvectors are not orthonormal.\n");
@@ -181,7 +225,11 @@ int verify_eigendecomposition(const pseudo_t3d* A, const pseudo_t3d* R, const ps
     return 1;
 }
 
-// verify A = R * Lambda * R^T
+/**
+### verify_reconstruction()
+
+Checks reconstruction `A = R * Lambda * R^T`.
+*/
 int verify_reconstruction(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d* Lambda) {
     pseudo_t3d Lambda_diag, temp, A_reconstructed;
     
@@ -229,6 +277,11 @@ int verify_reconstruction(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo
     return 1;
 }
 
+/**
+### main()
+
+Builds the test matrix, runs eigen-decomposition, and prints checks.
+*/
 int main(int argc, char *argv[]) {
     pseudo_t3d A, R;
     pseudo_v3d Lambda;
