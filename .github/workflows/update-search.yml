@@ -1,0 +1,85 @@
+name: Update Search Database
+
+# This workflow only updates the search database from the comphy-search repository
+# It does not rebuild the documentation, which should be built locally due to dependencies
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Run daily at 4:00 UTC
+  workflow_dispatch:  # Allow manual trigger
+
+# Add permissions needed for the workflow
+permissions:
+  contents: write    # This allows the action to commit and push changes
+
+jobs:
+  update-search:
+    runs-on: ubuntu-latest
+    env:
+      APP_BOT_USER_ID: 256885647
+
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0  # Fetch all history for proper git operations
+
+      - name: Clone search database repository
+        run: |
+          # Extract GitHub organization from GITHUB_REPOSITORY (format: org/repo)
+          GITHUB_ORG="${GITHUB_REPOSITORY%%/*}"
+          SEARCH_REPO="${SEARCH_REPO:-comphy-search}"
+          echo "Attempting to clone search database from ${GITHUB_ORG}/${SEARCH_REPO}..."
+
+          # Try to clone search repository (may not exist for all organizations)
+          if git clone "https://github.com/${GITHUB_ORG}/${SEARCH_REPO}.git"; then
+            mkdir -p .github/docs/assets/js
+            echo "Search database repository cloned successfully"
+          else
+            echo "Warning: Could not clone ${GITHUB_ORG}/${SEARCH_REPO}"
+            echo "Search functionality may be limited. This is expected if the search repository doesn't exist."
+            exit 0
+          fi
+      
+      - name: Copy search database
+        if: success()
+        run: |
+          SEARCH_REPO="${SEARCH_REPO:-comphy-search}"
+
+          # Check if search repository directory exists
+          if [ ! -d "${SEARCH_REPO}" ]; then
+            echo "Warning: ${SEARCH_REPO} directory not found (clone may have failed)"
+            echo "Search functionality will be limited"
+            exit 0
+          fi
+
+          # Ensure target directory exists
+          mkdir -p .github/docs/assets/js
+
+          if [ -f "${SEARCH_REPO}/search_db.json" ]; then
+            cp "${SEARCH_REPO}/search_db.json" .github/docs/assets/js/search_db.json
+            echo "Search database copied successfully"
+          else
+            echo "Warning: search_db.json not found in ${SEARCH_REPO}"
+            echo "Search functionality will be limited"
+            exit 0
+          fi
+      
+      - name: Commit and push changes directly
+        run: |
+          git config --global user.name 'comphy-search-updater[bot]'
+          git config --global user.email "${{ env.APP_BOT_USER_ID }}+comphy-search-updater[bot]@users.noreply.github.com"
+          git add .github/docs/assets/js/search_db.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update search database from comphy-search repository [skip-deploy]"
+            git push "https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+          fi

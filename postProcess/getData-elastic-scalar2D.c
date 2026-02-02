@@ -1,61 +1,37 @@
 /**
-# Simulation Snapshot Data Extractor for Multiphase Fluid Dynamics
+# Snapshot Data Extractor (Elastic Scalar 2D)
 
-This program extracts fluid dynamic properties from simulation snapshots,
-specifically designed for analyzing deformable soft matter systems including
-liquid drops, sheets, and bubbles. The code computes various tensor fields
-relevant to non-Newtonian fluid dynamics and viscoelastic material behavior.
+Extracts scalar diagnostics from Basilisk snapshots for
+viscoelastic/multiphase cases. Computes deformation-rate invariants,
+velocity magnitude, and conformation-trace deviations.
 
-## Physical Quantities Computed
+## Diagnostics
+- Deformation-rate invariant `D2c` (log10-scaled)
+- Velocity magnitude `vel`
+- Conformation trace deviation `trA` (log10-scaled)
 
-### Deformation Rate Tensor Analysis
-- Computes the symmetric deformation rate tensor components D_ij
-- Calculates the second invariant of the deformation rate tensor
-- Applies logarithmic scaling for visualization of wide dynamic ranges
-
-### Conformation Tensor Properties
-- Extracts viscoelastic polymer conformation tensor components
-- Computes trace deviations from equilibrium state
-- Logarithmic scaling for polymer stretching visualization
-
-### Velocity Field Analysis
-- Calculates velocity magnitude from vector components
-- Provides interpolation capabilities for field extraction
-
-## Author Information
-- **Author:** Vatsal Sanjay
-- **Email:** vatsalsanjay@gmail.com
-- **Affiliation:** Physics of Fluids Group
-- **Institution:** University of Twente
+## Author
+Vatsal Sanjay (vatsal.sanjay@comphy-lab.org)
+CoMPhy Lab
 */
 
 #include "utils.h"
 #include "output.h"
 
 /**
-## Global Variables and Field Declarations
+## Globals
 
-### Scalar Fields
-- `f[]`: Volume fraction field for multiphase identification
-- `conform_qq[]`: Out-of-plane conformation tensor component (q,q)
-- `D2c[]`: Logarithm of second invariant of deformation rate tensor
-- `vel[]`: Velocity magnitude field
-- `trA[]`: Logarithm of trace deviation of conformation tensor
-
-### Vector Fields
-- `u[]`: Velocity field components (u.x, u.y)
-
-### Conformation Tensor Components
-- `A11[]`: In-plane conformation tensor component (1,1)
-- `A12[]`: In-plane conformation tensor component (1,2)
-- `A22[]`: In-plane conformation tensor component (2,2)
-
-### Simulation Parameters
-- `filename[80]`: Input snapshot filename
-- `nx, ny`: Grid resolution in x and y directions
-- `len`: Number of scalar fields in output list
-- `xmin, ymin, xmax, ymax`: Domain boundaries
-- `Deltax, Deltay`: Grid spacing in x and y directions
+- `f[]`: Volume fraction field
+- `u[]`: Velocity components
+- `A11[]`, `A12[]`, `A22[]`: In-plane conformation components
+- `conform_qq[]`: Out-of-plane conformation component
+- `D2c[]`: Log10 of second invariant of deformation rate tensor
+- `vel[]`: Velocity magnitude
+- `trA[]`: Log10 of conformation-trace deviation
+- `filename[80]`: Snapshot filename
+- `nx`, `ny`: Output grid resolution
+- `xmin`, `ymin`, `xmax`, `ymax`: Domain bounds
+- `Deltax`, `Deltay`: Output grid spacing
 */
 scalar f[];
 vector u[];
@@ -68,48 +44,41 @@ scalar D2c[], vel[], trA[];
 scalar * list = NULL;
 
 /**
-## Main Function
+### main()
 
-### Purpose
-Extracts and processes fluid dynamic fields from simulation snapshots,
-computing deformation rates, velocity magnitudes, and polymer conformation
-properties for visualization and analysis.
+Extracts fields, computes diagnostics, and writes interpolated samples.
 
-### Arguments
-- `a`: Number of command line arguments
-- `arguments[]`: Command line argument array containing:
-  - `arguments[1]`: Input snapshot filename
-  - `arguments[2]`: Minimum x-coordinate (xmin)
-  - `arguments[3]`: Minimum y-coordinate (ymin)
-  - `arguments[4]`: Maximum x-coordinate (xmax)
-  - `arguments[5]`: Maximum y-coordinate (ymax)
-  - `arguments[6]`: Number of grid points in y-direction (ny)
+#### Args
 
-### Physical Implementation Details
+- `a`: Number of command line arguments.
+- `arguments[1]`: Snapshot filename.
+- `arguments[2]`: `xmin`.
+- `arguments[3]`: `ymin`.
+- `arguments[4]`: `xmax`.
+- `arguments[5]`: `ymax`.
+- `arguments[6]`: `ny` (points in y).
 
-#### Deformation Rate Tensor Calculation
-The deformation rate tensor components are computed using finite differences:
-- `D11 = ∂u_y/∂y`: Extensional rate in y-direction
-- `D22 = u_y/y`: Azimuthal extensional rate (cylindrical coordinates)
-- `D33 = ∂u_x/∂x`: Extensional rate in x-direction
-- `D13 = 0.5(∂u_y/∂x + ∂u_x/∂y)`: Shear rate component
+#### Details
 
-#### Second Invariant Computation
-The second invariant of the deformation rate tensor:
+Deformation-rate components (finite differences):
+- `D11 = du_y/dy`
+- `D22 = u_y/y`
+- `D33 = du_x/dx`
+- `D13 = 0.5 * (du_y/dx + du_x/dy)`
+
+Second invariant:
 ```
-D2 = D11² + D22² + D33² + 2×D13²
+$$ D2 = D11^2 + D22^2 + D33^2 + 2 * D13^2 $$
 ```
 
-#### Logarithmic Scaling
-For visualization across multiple decades:
+Log scaling:
 ```
-log_scale = log₁₀(value) if value > 0, else -10
+log10(value) if value > 0, else -10
 ```
 
-### Return Value
-- `0` on successful execution
-- Non-zero on error (implicit from system)
+#### Returns
 
+- `0` on success.
 */
 int main(int a, char const *arguments[])
 {
@@ -128,13 +97,10 @@ int main(int a, char const *arguments[])
   restore (file = filename);
 
   /**
-  ### Computational Loop for Field Processing
+  ### Field Processing Loop
 
-  This loop processes each grid cell to compute:
-  - Deformation rate tensor components using central differences
-  - Second invariant of deformation rate tensor
-  - Velocity magnitude
-  - Polymer conformation trace deviation
+  Computes deformation-rate invariants, velocity magnitude, and
+  conformation-trace diagnostics at each cell.
   */
   foreach() {
     // Compute deformation rate tensor components
@@ -167,11 +133,10 @@ int main(int a, char const *arguments[])
   }
 
   /**
-  ### Grid Setup and Data Extraction
+  ### Grid Setup
 
-  Creates a uniform grid for data extraction and interpolation.
-  The grid spacing is determined by the specified y-resolution,
-  maintaining aspect ratio for the x-direction.
+  Creates a uniform sampling grid. The x-resolution follows the
+  aspect ratio implied by `ny`.
   */
   FILE * fp = ferr;
   Deltay = (double)((ymax-ymin)/(ny));
@@ -183,11 +148,9 @@ int main(int a, char const *arguments[])
   double ** field = (double **) matrix_new (nx, ny+1, len*sizeof(double));
 
   /**
-  ### Field Interpolation Loop
+  ### Field Interpolation
 
-  Interpolates field values at regular grid points using the
-  simulation's interpolation routines. This provides smooth
-  field representations suitable for visualization.
+  Interpolates fields on the uniform sampling grid for output.
   */
   for (int i = 0; i < nx; i++) {
     double x = Deltax*(i+1./2) + xmin;
@@ -203,9 +166,7 @@ int main(int a, char const *arguments[])
   /**
   ### Data Output
 
-  Writes the extracted field data in ASCII format:
-  - First two columns: x and y coordinates
-  - Subsequent columns: Field values in order added to list
+  Writes ASCII rows with `x y` followed by fields in `list` order.
   */
   for (int i = 0; i < nx; i++) {
     double x = Deltax*(i+1./2) + xmin;

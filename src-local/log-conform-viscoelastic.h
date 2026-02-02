@@ -1,56 +1,36 @@
-/** 
-# Log-Conformation Method with Tensor Implementation
+/**
+# Log-Conformation (Tensor)
 
-## Overview
-- **Title**: log-conform-viscoelastic.h
-- **Version**: 10.5
-- **Description**: Tensor-based implementation of the log-conformation method for viscoelastic fluids
+Tensor-based log-conformation implementation for viscoelastic fluids,
+limited to 2D and axisymmetric cases.
 
-### Key Features
-1. Conformation tensor A exists across domain and relaxes according to λ
-2. Stress acts according to elastic modulus G
-3. Uses native tensor data structures for better code organization
-4. Supports both 2D and axisymmetric configurations
+## Key Features
 
-### Author Information
-- **Name**: Vatsal Sanjay
-- **Email**: vatsalsanjay@gmail.com
-- **Institution**: Physics of Fluids
-- **Last Updated**: Nov 23, 2024
+- Conformation tensor `A` relaxes with `lambda`.
+- Stress uses elastic modulus `Gp`.
+- Tensor representation for 2D/axi workflows.
 
-### Implementation Notes
-- Based on http://basilisk.fr/src/log-conform.h with key improvements:
-  - Uses G-λ formulation for better physical interpretation
-  - Fixes surface tension coupling bug where [σ_p] = 0 & [σ_s] = γκ
-  - Ensures [σ_s+σ_p] = γκ for correct interface behavior
+## Notes
 
-## Important Limitations
-### 3D Compatibility
-- Currently limited to 2D and axisymmetric cases only
-- 3D support is blocked by Basilisk core limitations:
-  - Boundary conditions for symmetric tensors are not implemented in Basilisk core
-  - See basilisk/src/grid/cartesian-common.h [lines 230-251](https://github.com/comphy-lab/Viscoelastic3D/blob/main/basilisk/src/grid/cartesian-common.h#L230-L251)
-  - Comment in source: "fixme: boundary conditions don't work!"
+- Based on `log-conform.h` with G-`lambda` formulation.
+- Fixes surface-tension coupling so total stress jump is `gamma * kappa`.
 
-### Alternative for 3D
-- For 3D simulations, use `log-conform-viscoelastic-scalar-3D.h`
-- Scalar version uses individual components instead of tensors
-- Provides full 3D functionality without boundary condition limitations
+## Limitations
 
-## Technical Notes
-### Variable Naming
-- `conform_p`, `conform_qq`: Represent the Conformation tensor
-- Tensor implementation provides more natural mathematical representation
-- Axisymmetric components handled separately when needed
+- 3D tensor boundary conditions are missing in Basilisk core.
+- Use `log-conform-viscoelastic-scalar-3D.h` for 3D.
+- See `basilisk/src/grid/cartesian-common.h` for the BC TODO.
 
-### Mathematical Framework
-The implementation follows the standard log-conformation approach:
-1. Uses tensor mathematics for clean formulation
-2. Handles both planar and axisymmetric geometries
-3. Provides natural extension to various constitutive models
+## Author
+
+Vatsal Sanjay (vatsal.sanjay@comphy-lab.org)
+CoMPhy Lab
+Last updated: 2024-11-23
 */
 
-// In this code, conform_p, conform_qq are in fact the Conformation tensor.  
+/**
+In this file, `conform_p` and `conform_qq` store the conformation tensor.
+*/
 
 /**
 # The log-conformation method for viscoelastic constitutive models
@@ -62,7 +42,7 @@ subjected to deformation. Therefore these materials are governed by
 the Navier--Stokes equations enriched with an extra *elastic* stress
 $Tij$
 $$
-\rho\left[\partial_t\mathbf{u}+\nabla\cdot(\mathbf{u}\otimes\mathbf{u})\right] = 
+\rho\left[\partial_t\mathbf{u}+\nabla\cdot(\mathbf{u}\otimes\mathbf{u})\right] =
 - \nabla p + \nabla\cdot(2\mu_s\mathbf{D}) + \nabla\cdot\mathbf{T}
 + \rho\mathbf{a}
 $$
@@ -72,7 +52,7 @@ viscoelastic fluid.
 
 The *polymeric* stress $\mathbf{T}$ represents memory effects due to
 the polymers. Several constitutive rheological models are available in
-the literature where the polymeric stress $\mathbf{T}$ is typically a 
+the literature where the polymeric stress $\mathbf{T}$ is typically a
 function $\mathbf{f_s}(\cdot)$ of the conformation tensor $\mathbf{A}$ such as
 $$
 \mathbf{T} = G_p \mathbf{f_s}(\mathbf{A})
@@ -84,7 +64,7 @@ the polymer chains. $\mathbf{A}$ is governed by the equation
 $$
 D_t \mathbf{A} - \mathbf{A} \cdot \nabla \mathbf{u} - \nabla
 \mathbf{u}^{T} \cdot \mathbf{A} =
--\frac{\mathbf{f_r}(\mathbf{A})}{\lambda} 
+-\frac{\mathbf{f_r}(\mathbf{A})}{\lambda}
 $$
 where $D_t$ denotes the material derivative and
 $\mathbf{f_r}(\cdot)$ is the relaxation function. Here, $\lambda$ is the relaxation time.
@@ -108,7 +88,7 @@ different constitutive models.
 The primary parameters are the relaxation time
 $\lambda$ and the elastic modulus $G_p$. The solvent viscosity
 $\mu_s$ is defined in the [Navier-Stokes
-solver](navier-stokes/centered.h). 
+solver](navier-stokes/centered.h).
 
 Gp and lambda are defined in [two-phaseVE.h](two-phaseVE.h).
 */
@@ -118,7 +98,7 @@ Gp and lambda are defined in [two-phaseVE.h](two-phaseVE.h).
 
 The numerical resolution of viscoelastic fluid problems often faces the
 [High-Weissenberg Number
-Problem](http://www.ma.huji.ac.il/~razk/iWeb/My_Site/Research_files/Visco1.pdf). 
+Problem](http://www.ma.huji.ac.il/~razk/iWeb/My_Site/Research_files/Visco1.pdf).
 This is a numerical instability appearing when strongly elastic flows
 create regions of high stress and fine features. This instability
 poses practical limits to the values of the relaxation time of the
@@ -129,56 +109,56 @@ of the conformation tensor $\Psi = \log \, \mathbf{A}$ rather than the
 viscoelastic stress tensor to circumvent the instability.
 
 The constitutive equation for the log of the conformation tensor is
-$$ 
+$$
 D_t \Psi = (\Omega \cdot \Psi -\Psi \cdot \Omega) + 2 \mathbf{B} +
 \frac{e^{-\Psi} \mathbf{f}_r (e^{\Psi})}{\lambda}
 $$
 where $\Omega$ and $\mathbf{B}$ are tensors that result from the
 decomposition of the transpose of the tensor gradient of the
 velocity
-$$ 
+$$
 (\nabla \mathbf{u})^T = \Omega + \mathbf{B} + N
-\mathbf{A}^{-1} 
-$$ 
+\mathbf{A}^{-1}
+$$
 
 The antisymmetric tensor $\Omega$ requires only the memory of a scalar
 in 2D since,
-$$ 
-\Omega = \left( 
+$$
+\Omega = \left(
 \begin{array}{cc}
 0 & \Omega_{12} \\
 -\Omega_{12} & 0
-\end{array} 
+\end{array}
 \right)
 $$
 
 For 3D, $\Omega$ is a skew-symmetric tensor given by
 
 $$
-\Omega = \left( 
+\Omega = \left(
 \begin{array}{ccc}
 0 & \Omega_{12} & \Omega_{13} \\
 -\Omega_{12} & 0 & \Omega_{23} \\
 -\Omega_{13} & -\Omega_{23} & 0
-\end{array} 
+\end{array}
 \right)
 $$
 
 The log-conformation tensor, $\Psi$, is related to the
-polymeric stress tensor $\mathbf{T}$, by the strain function 
+polymeric stress tensor $\mathbf{T}$, by the strain function
 $\mathbf{f}_s (\mathbf{A})$
-$$ 
+$$
 \Psi = \log \, \mathbf{A} \quad \mathrm{and} \quad \mathbf{T} =
 \frac{G_p}{\lambda} \mathbf{f}_s (\mathbf{A})
 $$
 where $Tr$ denotes the trace of the tensor and $L$ is an additional
 property of the viscoelastic fluid.
 
-We will use the Bell--Collela--Glaz scheme to advect the log-conformation 
+We will use the Bell--Collela--Glaz scheme to advect the log-conformation
 tensor $\Psi$. */
 
 /*
-TODO: 
+TODO:
 - Perhaps, instead of the Bell--Collela--Glaz scheme, we can use the conservative form of the advection equation and transport the log-conformation tensor with the VoF color function, similar to [http://basilisk.fr/src/navier-stokes/conserving.h](http://basilisk.fr/src/navier-stokes/conserving.h)
 */
 
@@ -235,13 +215,13 @@ event defaults (i = 0) {
 
 #if AXI
   scalar s1 = tau_p.x.y;
-  s1[bottom] = dirichlet (0.);  
-#endif 
+  s1[bottom] = dirichlet (0.);
+#endif
 
 #if AXI
   scalar s2 = conform_p.x.y;
-  s2[bottom] = dirichlet (0.);  
-#endif 
+  s2[bottom] = dirichlet (0.);
+#endif
 }
 
 /**
@@ -323,9 +303,9 @@ b) the advection term:
 $$
 \partial_t \Psi + \nabla \cdot (\Psi \mathbf{u}) = 0
 $$
-c) the model term (but set in terms of the conformation 
+c) the model term (but set in terms of the conformation
 tensor $\mathbf{A}$). In an Oldroyd-B viscoelastic fluid, the model is
-$$ 
+$$
 \partial_t \mathbf{A} = -\frac{\mathbf{f}_r (\mathbf{A})}{\lambda}
 $$
 */
@@ -361,8 +341,8 @@ event tracer_advection(i++)
        \tau_{p_{\theta \theta}})]$. */
 
 #if AXI
-      double Aqq = conform_qq[]; 
-      Psiqq[] = log (Aqq); 
+      double Aqq = conform_qq[];
+      Psiqq[] = log (Aqq);
 #endif
 
       /**
@@ -376,43 +356,43 @@ event tracer_advection(i++)
 
       /*
       Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
-      Please report this bug by opening an issue on the GitHub repository. 
+      Please report this bug by opening an issue on the GitHub repository.
       */
       if (Lambda.x <= 0. || Lambda.y <= 0.) {
         fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g\n", Lambda.x, Lambda.y);
         fprintf(ferr, "x = %g, y = %g\n", x, y);
         exit(1);
       }
-      
+
       /**
-      $\Psi = \log \mathbf{A}$ is easily obtained after diagonalization, 
+      $\Psi = \log \mathbf{A}$ is easily obtained after diagonalization,
       $\Psi = R \cdot \log(\Lambda) \cdot R^T$. */
-      
+
       Psi.x.y[] = R.x.x*R.y.x*log(Lambda.x) + R.y.y*R.x.y*log(Lambda.y);
       foreach_dimension()
       	Psi.x.x[] = sq(R.x.x)*log(Lambda.x) + sq(R.x.y)*log(Lambda.y);
 
       /**
-      We now compute the upper convective term $2 \mathbf{B} + 
+      We now compute the upper convective term $2 \mathbf{B} +
       (\Omega \cdot \Psi -\Psi \cdot \Omega)$.
 
       The diagonalization will be applied to the velocity gradient
       $(\nabla u)^T$ to obtain the antisymmetric tensor $\Omega$ and
       the traceless, symmetric tensor, $\mathbf{B}$. If the conformation
-      tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.  
+      tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.
 
-      Otherwise, compute M = R * (nablaU)^T * R^T, where nablaU is the velocity gradient tensor. Then, 
-      
+      Otherwise, compute M = R * (nablaU)^T * R^T, where nablaU is the velocity gradient tensor. Then,
+
       1. Calculate omega using the off-diagonal elements of M and eigenvalues:
         omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x)
         This represents the rotation rate in the eigenvector basis.
-      
+
       2. Transform omega back to physical space to get OM:
         OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega
         This gives us the rotation tensor Omega in the original coordinate system.
-      
+
       3. Compute B tensor components using M and R: B is related to M and R through:
-        
+
         In 2D:
         $$
         B_{xx} = R_{xx}^2 M_{xx} + R_{xy}^2 M_{yy} \\
@@ -420,7 +400,7 @@ event tracer_advection(i++)
         B_{yx} = B_{xy} \\
         B_{yy} = -B_{xx}
         $$
-        
+
         Where:
         - R is the eigenvector matrix of the conformation tensor
         - M is the velocity gradient tensor in the eigenvector basis
@@ -430,28 +410,28 @@ event tracer_advection(i++)
       pseudo_t B;
       double OM = 0.;
       if (fabs(Lambda.x - Lambda.y) <= 1e-20) {
-        B.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1])/(4.*Delta); 
-        foreach_dimension() 
+        B.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1])/(4.*Delta);
+        foreach_dimension()
           B.x.x = (u.x[1,0] - u.x[-1,0])/(2.*Delta);
       } else {
         pseudo_t M;
         foreach_dimension() {
-          M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) + 
+          M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) +
           sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
-          R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
+          R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] +
           u.y[1] - u.y[-1]))/(2.*Delta);
-          
-          M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
+
+          M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) +
           R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
           R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
           R.y.x*R.y.y*(u.y[0,1] - u.y[0,-1]))/(2.*Delta);
         }
         double omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
         OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega;
-        
+
         B.x.y = M.x.x*R.x.x*R.y.x + M.y.y*R.y.y*R.x.y;
         foreach_dimension()
-          B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);	
+          B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);
       }
 
       /**
@@ -467,10 +447,10 @@ event tracer_advection(i++)
 
       /**
       In the axisymmetric case, the governing equation for $\Psi_{\theta
-      \theta}$ only involves that component, 
-      $$ 
-      \Psi_{\theta \theta}|_t - 2 L_{\theta \theta} = 
-      \frac{\mathbf{f}_r(e^{-\Psi_{\theta \theta}})}{\lambda} 
+      \theta}$ only involves that component,
+      $$
+      \Psi_{\theta \theta}|_t - 2 L_{\theta \theta} =
+      \frac{\mathbf{f}_r(e^{-\Psi_{\theta \theta}})}{\lambda}
       $$
       with $L_{\theta \theta} = u_y/y$. Therefore step (a) for
       $\Psi_{\theta \theta}$ is */
@@ -483,7 +463,7 @@ event tracer_advection(i++)
 
   /**
   ### Advection of $\Psi$
-  
+
   We proceed with step (b), the advection of the log of the
   conformation tensor $\Psi$. */
 
@@ -506,7 +486,7 @@ event tracer_advection(i++)
       pseudo_v Lambda;
       diagonalization_2D (&Lambda, &R, &A);
       Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
-      
+
       A.x.y = R.x.x*R.y.x*Lambda.x + R.y.y*R.x.y*Lambda.y;
       foreach_dimension()
         A.x.x = sq(R.x.x)*Lambda.x + sq(R.x.y)*Lambda.y;
@@ -515,17 +495,17 @@ event tracer_advection(i++)
 #endif
 
       /**
-      We perform now step (c) by integrating 
+      We perform now step (c) by integrating
       $\mathbf{A}_t = -\mathbf{f}_r (\mathbf{A})/\lambda$ to obtain
       $\mathbf{A}^{n+1}$. This step is analytic,
       $$
-      \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} = 
+      \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} =
       \frac{\Delta t}{\lambda}
       $$
       */
 
      double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
-     
+
 #if AXI
       Aqq = (1. - intFactor) + intFactor*exp(Psiqq[]);
 #endif
@@ -537,7 +517,7 @@ event tracer_advection(i++)
       /**
         Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
         $\mathbf{A}^{n+1}$.  */
-      
+
       conform_p.x.y[] = A.x.y;
       tau_p.x.y[] = Gp[]*A.x.y;
 #if AXI

@@ -1,9 +1,13 @@
 /**
- * @file dropImpact.c
- * @brief This file contains the simulation code for the drop impact on a solid surface. 
- * @author Vatsal Sanjay
- * @version 0.2
- * @date Oct 18, 2024
+# Drop Impact
+
+Simulates viscoelastic drop impact on a solid surface using the
+Basilisk two-phase solver and log-conformation rheology.
+
+## Author
+Vatsal Sanjay (vatsal.sanjay@comphy-lab.org)
+CoMPhy Lab
+Date: Oct 18, 2024
 */
 
 #include "axi.h"
@@ -31,38 +35,57 @@
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
+/**
+## Output Cadence
+*/
 #define tsnap (1e-2)
 
-// Error tolerancs
-#define fErr (1e-3)                                 // error tolerance in f1 VOF
-#define KErr (1e-6)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
-#define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
+/**
+## Adaptivity Tolerances
+
+- `fErr`: VOF error for `f`
+- `KErr`: Curvature error (height-function)
+- `VelErr`: Velocity error
+*/
+#define fErr (1e-3)
+#define KErr (1e-6)
+#define VelErr (1e-2)
 
 #define xDist (5e-2)
 #define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
 
-// boundary conditions
-// u.t[left] = dirichlet(0.); // todo: later on use no-slip. For testing, free-slip is faster.
-// u.r[left] = dirichlet(0.); // todo: later on use no-slip. For testing, free-slip is faster.
+/**
+## Boundary Conditions
+
+Left boundary uses free-slip for faster testing.
+*/
 f[left] = dirichlet(0.0);
 
 int MAXlevel;
-// We -> Weber number of the drop
-// Oh -> Solvent Ohnesorge number
-// Oha -> air Ohnesorge number
-// De -> Deborah number
-// Ec -> Elasto-capillary number
-// for now there is no viscoelasticity
+/**
+## Dimensionless Groups
+
+- `We`: Drop Weber number
+- `Oh`: Solvent Ohnesorge number
+- `Oha`: Air Ohnesorge number
+- `De`: Deborah number
+- `Ec`: Elasto-capillary number
+*/
 
 double We, Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
+/**
+### main()
+
+Sets domain parameters, material properties, and launches the run.
+*/
 int main(int argc, char const *argv[]) {
 
   dtmax = 1e-5;
 
   L0 = 4.0;
-  
+
   // Values taken from the terminal
   MAXlevel = 8;
   tmax = 4.0;
@@ -86,7 +109,7 @@ int main(int argc, char const *argv[]) {
   mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
   G1 = Ec/We, G2 = 0.0;
   lambda1 = De*sqrt(We), lambda2 = 0.0;
-  
+
   f.sigma = 1.0/We;
 
   run();
@@ -106,6 +129,8 @@ event init (t = 0) {
 
 /**
 ## Adaptive Mesh Refinement
+
+Refines based on interface, curvature, and velocity errors.
 */
 event adapt(i++){
   scalar KAPPA[], trA[];
@@ -126,7 +151,9 @@ event adapt(i++){
 }
 
 /**
-## Dumping snapshots
+## Dumping Snapshots
+
+Writes restart and time-stamped snapshot dumps.
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
   p.nodump = false;
@@ -137,6 +164,8 @@ event writingFiles (t = 0; t += tsnap; t <= tmax) {
 
 /**
 ## Ending Simulation
+
+Prints summary parameters at completion.
 */
 event end (t = end) {
   if (pid() == 0)
@@ -144,7 +173,9 @@ event end (t = end) {
 }
 
 /**
-## Log writing
+## Log Writing
+
+Tracks kinetic energy and aborts on blow-up or decay.
 */
 event logWriting (i++) {
 
@@ -180,17 +211,17 @@ event logWriting (i++) {
 
   if (i > 1e1 && pid() == 0) {
     if (ke > 1e2 || ke < 1e-8) {
-      const char* message = (ke > 1e2) ? 
-        "The kinetic energy blew up. Stopping simulation\n" : 
+      const char* message = (ke > 1e2) ?
+        "The kinetic energy blew up. Stopping simulation\n" :
         "kinetic energy too small now! Stopping!\n";
-      
+
       fprintf(ferr, "%s", message);
-      
+
       fp = fopen("log", "a");
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
-      
+
       dump(file=dumpFile);
       return 1;
     }
