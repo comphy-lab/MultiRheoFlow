@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/docs/**'  # Only trigger when docs directory changes
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment; queue older runs so they can exit cleanly
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should-skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - id: check
+        name: Check if should skip
+        run: |
+          should_skip=false
+          if git log -1 --pretty=%B | grep -q "\[skip-deploy\]"; then
+            should_skip=true
+          fi
+
+          if latest_sha="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"; then
+            if [ -n "$latest_sha" ] && [ "$latest_sha" != "$GITHUB_SHA" ]; then
+              should_skip=true
+            fi
+          fi
+
+          echo "should_skip=$should_skip" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: check-skip
+    if: ${{ needs.check-skip.outputs.should-skip == 'false' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.github/docs'  # Deploy the pre-built docs directory
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 
