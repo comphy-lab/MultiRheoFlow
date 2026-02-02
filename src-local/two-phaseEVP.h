@@ -1,25 +1,19 @@
 /**
- * Modification by Vatsal Sanjay, Arivazhagan G. Balasubramanian (Ari) 
- * Version 2.0, Jun 30, 2025
+# Two-Phase Elasto-Viscoplastic Solver
 
-# Changelog
-- Jun 30, 2025: added support for EVP simulations.
+Modified from Basilisk `two-phase.h` and `two-phase-generic.h` to
+support elasto-viscoplastic flows with log-conformation rheology.
 
-# Brief history
-- v1.0 is the vanilla Basilisk code for two-phase flows: http://basilisk.fr/src/two-phase.h + http://basilisk.fr/src/two-phase-generic.h
-- v2.0 is the modification for elasto-viscoplastic fluids using the log-conformation method.
+## Change Log
 
-# Two-phase interfacial flows
-This is a modified version of [two-phase.h](http://basilisk.fr/src/two-phase.h). It contains the implementation of
-Viscoplastic Fluid (Bingham Fluid).<br/>
-This file helps setup simulations for flows of two fluids separated by
-an interface (i.e. immiscible fluids). It is typically used in
-combination with a [Navier--Stokes solver](navier-stokes/centered.h).
+- 2025-06-30: Add support for EVP simulations.
 
-The interface between the fluids is tracked with a Volume-Of-Fluid
-method. The volume fraction in fluid 1 is $f=1$ and $f=0$ in fluid
-2. The densities and dynamic viscosities for fluid 1 and 2 are *rho1*,
-*mu1*, *rho2*, *mu2*, respectively. */
+## Two-Phase Interfacial Flows
+
+The interface is tracked with VOF. The volume fraction is `f = 1` in
+fluid 1 and `f = 0` in fluid 2. Densities and viscosities are `rho1`,
+`mu1`, `rho2`, `mu2`.
+*/
 
 #include "vof.h"
 
@@ -32,8 +26,9 @@ double tau01 = 0., tau02 = 0.; // yield-stress
 double TOLelastic = 1e-2; // tolerance for elastic modulus #TOFIX: this must always be a very small number.
 
 /**
-Auxilliary fields are necessary to define the (variable) specific
-volume $\alpha=1/\rho$ as well as the cell-centered density. */
+Auxiliary fields define the specific volume $\alpha = 1/\rho$ and the
+cell-centered density.
+*/
 
 face vector alphav[];
 scalar rhov[];
