@@ -1,9 +1,12 @@
 /**
- * @file dropAtomisation.c
- * @brief This file contains the simulation code for the drop atomisation. 
- * @author Ayush Dixit & Vatsal Sanjay
- * @version 5.0
- * @date Oct 20, 2024
+# Drop Atomisation
+
+Simulates viscoelastic drop atomisation using the Basilisk two-phase
+solver and log-conformation rheology.
+
+## Author
+Ayush Dixit, Vatsal Sanjay
+Date: Oct 20, 2024
 */
 
 // #include "axi.h"
@@ -32,36 +35,57 @@
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
-#define tsnap (0.1) // 0.001 only for some cases. 
-// Error tolerancs
-#define fErr (1e-2)                                 // error tolerance in f1 VOF
-#define KErr (1e-4)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
-#define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
-#define AErr (1e-3)                             // error tolerances in conformation inside the liquid
+/**
+## Output Cadence
+*/
+#define tsnap (0.1) // 0.001 only for some cases.
+
+/**
+## Adaptivity Tolerances
+
+- `fErr`: VOF error for `f`
+- `KErr`: Curvature error (height-function)
+- `VelErr`: Velocity error
+- `AErr`: Conformation error in liquid
+*/
+#define fErr (1e-2)
+#define KErr (1e-4)
+#define VelErr (1e-2)
+#define AErr (1e-3)
 
 #define R2(x,y,z)  (sq(x-3.) + sq(y) + sq(z))
 
-// boundary conditions
-// inflow: left
-u.n[left]  = dirichlet(1.);
-// p[left] = dirichlet(0);
+/**
+## Boundary Conditions
 
-// outflow: right
+- Inflow: left
+- Outflow: right
+*/
+u.n[left]  = dirichlet(1.);
 u.n[right] = neumann(0.);
 p[right] = dirichlet(0);
 
 int MAXlevel;
-// We -> Weber number
-// Oh -> Solvent Ohnesorge number
-// Oha -> air Ohnesorge number
-// De -> Deborah number
-// Ec -> Elasto-capillary number
+/**
+## Dimensionless Groups
+
+- `We`: Weber number
+- `Oh`: Solvent Ohnesorge number
+- `Oha`: Air Ohnesorge number
+- `De`: Deborah number
+- `Ec`: Elasto-capillary number
+*/
 
 double Oh, Oha, De, We, RhoInOut, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
+/**
+### main()
+
+Sets domain parameters, material properties, and launches the run.
+*/
 int  main(int argc, char const *argv[]) {
-  // dtmax = 1e-5; //  BEWARE of this for stability issues. 
+  // dtmax = 1e-5; //  BEWARE of this for stability issues.
 
   L0 = 20;
   init_grid (1 << 6);
@@ -102,10 +126,10 @@ int  main(int argc, char const *argv[]) {
   // elastic parts
   // in G1, we need to mutiply by the density ratio (again, because Ec is based on the density of the liquid but in the code it is based on the density of the gas)
   G1 = Ec/We, G2 = 0.0;
-  // Here, lambda is essentially the Weissenberg number, so there is no density in the expression. 
+  // Here, lambda is essentially the Weissenberg number, so there is no density in the expression.
   lambda1 = De*sqrt(We), lambda2 = 0.0;
-  
-  // surface tension -- the Weber number is based on the density of the gas! So, all good. 
+
+  // surface tension -- the Weber number is based on the density of the gas! So, all good.
   f.sigma = 1.0/We;
 
   run();
@@ -120,6 +144,8 @@ event init (t = 0) {
 
 /**
 ## Adaptive Mesh Refinement
+
+Refines based on interface, curvature, and velocity errors.
 */
 event adapt(i++){
   scalar KAPPA[];
@@ -137,7 +163,9 @@ event adapt(i++){
 }
 
 /**
-## Dumping snapshots
+## Dumping Snapshots
+
+Writes restart and time-stamped snapshot dumps.
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
   dump (file = dumpFile);
@@ -147,6 +175,8 @@ event writingFiles (t = 0; t += tsnap; t <= tmax) {
 
 /**
 ## Ending Simulation
+
+Prints summary parameters at completion.
 */
 event end (t = end) {
   if (pid() == 0)
@@ -154,7 +184,9 @@ event end (t = end) {
 }
 
 /**
-## Log writing
+## Log Writing
+
+Tracks kinetic energy and aborts on blow-up or decay.
 */
 event logWriting (i++) {
 
@@ -194,17 +226,17 @@ event logWriting (i++) {
 
   if (i > 1e1 && pid() == 0) {
     if (ke > 1e6 || ke < 1e-6) {
-      const char* message = (ke > 1e6) ? 
-        "The kinetic energy blew up. Stopping simulation\n" : 
+      const char* message = (ke > 1e6) ?
+        "The kinetic energy blew up. Stopping simulation\n" :
         "kinetic energy too small now! Stopping!\n";
-      
+
       fprintf(ferr, "%s", message);
-      
+
       fp = fopen("log", "a");
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
-      
+
       dump(file=dumpFile);
       return 1;
     }

@@ -1,9 +1,13 @@
 /**
- * @file pinchOff.c
- * @brief This file contains the simulation code for the pinch-off of a viscoelastic liquid jet. 
- * @author Vatsal Sanjay
- * @version 0.2
- * @date Oct 18, 2024
+# Jet Pinch-Off
+
+Simulates viscoelastic jet pinch-off using the Basilisk two-phase
+solver and log-conformation rheology.
+
+## Author
+Vatsal Sanjay (vatsal.sanjay@comphy-lab.org)
+CoMPhy Lab
+Date: Oct 18, 2024
 */
 
 #include "axi.h"
@@ -31,34 +35,53 @@
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
+/**
+## Output Cadence
+*/
 #define tsnap (1e-2)
 
-// Error tolerancs
-#define fErr (1e-3)                                 // error tolerance in f1 VOF
-#define KErr (1e-6)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
-#define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
+/**
+## Adaptivity Tolerances
+
+- `fErr`: VOF error for `f`
+- `KErr`: Curvature error (height-function)
+- `VelErr`: Velocity error
+*/
+#define fErr (1e-3)
+#define KErr (1e-6)
+#define VelErr (1e-2)
 
 #define epsilon (0.5)
 #define R2(x,y,z,e) (sqrt(sq(y) + sq(z)) + (e*sin(x/4.)))
 
-// boundary conditions
+/**
+## Boundary Conditions
+*/
 u.n[top] = neumann(0.0);
 p[top] = dirichlet(0.0);
 
 int MAXlevel;
-// Oh -> Solvent Ohnesorge number
-// Oha -> air Ohnesorge number
-// De -> Deborah number
-// Ec -> Elasto-capillary number
-// for now there is no viscoelasticity
+/**
+## Dimensionless Groups
+
+- `Oh`: Solvent Ohnesorge number
+- `Oha`: Air Ohnesorge number
+- `De`: Deborah number
+- `Ec`: Elasto-capillary number
+*/
 
 double Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
+/**
+### main()
+
+Sets domain parameters, material properties, and launches the run.
+*/
 int main(int argc, char const *argv[]) {
 
   L0 = 2*pi;
-  
+
   // Values taken from the terminal
   MAXlevel = 6;
   tmax = 10;
@@ -96,6 +119,8 @@ event init (t = 0) {
 
 /**
 ## Adaptive Mesh Refinement
+
+Refines based on interface, curvature, and velocity errors.
 */
 event adapt(i++){
   scalar KAPPA[];
@@ -106,7 +131,9 @@ event adapt(i++){
 }
 
 /**
-## Dumping snapshots
+## Dumping Snapshots
+
+Writes restart and time-stamped snapshot dumps.
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
   dump (file = dumpFile);
@@ -116,6 +143,8 @@ event writingFiles (t = 0; t += tsnap; t <= tmax) {
 
 /**
 ## Ending Simulation
+
+Prints summary parameters at completion.
 */
 event end (t = end) {
   if (pid() == 0)
@@ -123,7 +152,9 @@ event end (t = end) {
 }
 
 /**
-## Log writing
+## Log Writing
+
+Tracks kinetic energy and aborts on blow-up or decay.
 */
 event logWriting (i++) {
 
@@ -163,17 +194,17 @@ event logWriting (i++) {
 
   if (i > 1e1 && pid() == 0) {
     if (ke > 1e2 || ke < 1e-8) {
-      const char* message = (ke > 1e2) ? 
-        "The kinetic energy blew up. Stopping simulation\n" : 
+      const char* message = (ke > 1e2) ?
+        "The kinetic energy blew up. Stopping simulation\n" :
         "kinetic energy too small now! Stopping!\n";
-      
+
       fprintf(ferr, "%s", message);
-      
+
       fp = fopen("log", "a");
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
-      
+
       dump(file=dumpFile);
       return 1;
     }
