@@ -48,13 +48,16 @@ flow scenarios.
 - `simulationCases/pinchOff.c`
 - `simulationCases/testEigenDecomposition.c`
 - Parameter files such as:
-  - `simulationCases/default-VE.params`
-  - `simulationCases/default-EVP.params`
-  - `simulationCases/default-EVP-HB.params`
+  - `default-VE.params`
+  - `default-EVP.params`
+  - `default-EVP-HB.params`
   - `simulationCases/Bo0.0010.dat`
 
 ## Repository Structure
 
+- `runSimulation.sh`: Root-level runner using `--case` and `--input`.
+- `default-*.params`: Root-level default parameter files for drop-impact
+  variants.
 - `src-local/`: Project-specific Basilisk headers and helpers.
 - `simulationCases/`: Simulation entry points and case utilities.
 - `postProcess/`: Post-processing and visualization tools.
@@ -93,18 +96,22 @@ cd simulationCases
 CFLAGS=-DDISPLAY=-1 make dropImpact.tst
 ```
 
-### Run via Helper Scripts
+### Run via Root Runner
 
 ```bash
-cd simulationCases
-bash runCases.sh dropImpact
-bash runCases.sh dropImpact-EVP
-bash runCases.sh dropImpact-EVP-HB
-bash cleanup.sh dropImpact
+bash runSimulation.sh
+bash runSimulation.sh --case simulationCases/dropImpact.c
+bash runSimulation.sh --case simulationCases/dropImpact-EVP.c
+bash runSimulation.sh --case simulationCases/dropImpact-EVP-HB.c
 ```
 
-`runCases.sh` uses case-specific defaults when no parameter file is
-provided:
+Defaults:
+
+- `--case` -> `simulationCases/dropImpact.c`
+- `--input` -> `default-VE.params`
+
+When a different case is provided and `--input` is omitted,
+`runSimulation.sh` uses case-specific defaults:
 
 - `dropImpact` -> `default-VE.params`
 - `dropImpact-EVP` -> `default-EVP.params`
@@ -121,8 +128,21 @@ Parameter keys:
 You can also override defaults by passing a parameter file:
 
 ```bash
+bash runSimulation.sh --case simulationCases/dropImpact-EVP-HB.c \
+  --input default-EVP-HB.params
+bash runSimulation.sh --case simulationCases/dropImpact-EVP-HB.c \
+  --input my-custom.params
+```
+
+### Legacy Wrapper
+
+`simulationCases/runCases.sh` remains available as a compatibility
+wrapper around `runSimulation.sh`:
+
+```bash
 cd simulationCases
-bash runCases.sh dropImpact-EVP-HB my-custom.params
+bash runCases.sh dropImpact-EVP-HB default-EVP-HB.params
+bash cleanup.sh dropImpact-EVP-HB
 ```
 
 ### Compile and Run from CLI

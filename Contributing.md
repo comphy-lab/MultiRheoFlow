@@ -13,6 +13,9 @@ curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_inst
 Replace `v2026-01-13` with the latest version from [Basilisk C](https://github.com/comphy-lab/basilisk-C).
 
 ## Project Structure
+- `runSimulation.sh`: Root-level runner with `--case` and `--input`
+  arguments
+- `default-*.params`: Root-level default parameter files
 - `basilisk/src/`: Core Basilisk CFD library (reference only, do not modify)
 - `src-local/`: Project-specific Basilisk headers and helpers
 - `simulationCases/`: Main simulation entry points and case utilities
@@ -37,19 +40,30 @@ qcc -O2 -Wall -disable-dimensions -I$PWD/src-local file.c -o executable -lm
 
 # Run simulation cases
 cd simulationCases && make case_name.tst
-cd simulationCases && bash runCases.sh case_name
-cd simulationCases && bash runCases.sh case_name custom.params
+bash runSimulation.sh
+bash runSimulation.sh --case simulationCases/dropImpact.c
+bash runSimulation.sh --case simulationCases/dropImpact-EVP-HB.c \
+  --input default-EVP-HB.params
+bash runSimulation.sh --case simulationCases/dropImpact-EVP-HB.c \
+  --input custom.params
 
 # Cleanup
 cd simulationCases && bash cleanup.sh case_name
 ```
 
-For drop-impact variants, `runCases.sh` auto-loads defaults when no
-params file is provided:
+Defaults:
+
+- `--case` -> `simulationCases/dropImpact.c`
+- `--input` -> `default-VE.params`
+
+When a different case is provided and `--input` is not, `runSimulation.sh`
+auto-loads case defaults from repo root:
 
 - `dropImpact` -> `default-VE.params`
 - `dropImpact-EVP` -> `default-EVP.params`
 - `dropImpact-EVP-HB` -> `default-EVP-HB.params`
+
+`simulationCases/runCases.sh` is kept as a compatibility wrapper.
 
 ## Documentation
 - Do not edit `.github/docs/` directly (auto-generated)
