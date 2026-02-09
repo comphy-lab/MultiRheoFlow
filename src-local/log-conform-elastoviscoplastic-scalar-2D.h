@@ -172,6 +172,7 @@ TODO:
 (const) scalar Gp = unity; // elastic modulus
 (const) scalar lambda = unity; // relaxation time
 (const) scalar tau0 = unity; // yield-stress
+double saramito_yield_eps = 1e-6; // regularization for yield factor denominator
 
 scalar A11[], A12[], A22[]; // conformation tensor
 scalar T11[], T12[], T22[]; // stress tensor
@@ -510,7 +511,8 @@ event tracer_advection(i++)
 #else
     double tauD = sqrt(0.25*(T11[] - T22[])*(T11[] - T22[]) + T12[]*T12[]);
 #endif
-    double yieldFactor = max(0., (tauD - tau0[])/(tauD + 1e-6)); // $\mathcal{F}$
+    double yieldFactor =
+      max(0., (tauD - tau0[])/(tauD + saramito_yield_eps)); // $\mathcal{F}$
     double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
 
 #if AXI
