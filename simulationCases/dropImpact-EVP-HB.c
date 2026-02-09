@@ -29,6 +29,7 @@ Date: Oct 18, 2024
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"
+#include "case-params.h"
 
 /**
 ## Output Cadence
@@ -61,16 +62,35 @@ int MAXlevel;
 ## Dimensionless Groups
 
 - `We`: Drop Weber number
-- `Oh`: Solvent Ohnesorge number
+- `Ohs`: Solvent Ohnesorge number
 - `Oha`: Air Ohnesorge number
-- `De`: Deborah number
+- `Ohp`: Polymer Ohnesorge number
 - `Ec`: Elasto-capillary number
 - `J`: Yield stress
-- `nHB`: HB flow index
+- `n`: HB flow index
 */
 
-double We, Oh, Oha, De, Ec, J, nHB0, tmax;
+double We, Ohs, Oha, Ohp, De, Ec, J, nHB0, tmax, Ldomain;
 char nameOut[80], dumpFile[80];
+
+static int loadInputParams (const char * params_file) {
+  paramEntry params[] = {
+    {"MAXlevel", &MAXlevel, PARAM_KIND_INT, 0, 0},
+    {"Ldomain", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+    {"L0", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+    {"tmax", &tmax, PARAM_KIND_DOUBLE, 0, 0},
+    {"We", &We, PARAM_KIND_DOUBLE, 0, 0},
+    {"Ohs", &Ohs, PARAM_KIND_DOUBLE, 0, 0},
+    {"Oha", &Oha, PARAM_KIND_DOUBLE, 0, 0},
+    {"Ohp", &Ohp, PARAM_KIND_DOUBLE, 0, 0},
+    {"Ec", &Ec, PARAM_KIND_DOUBLE, 0, 0},
+    {"J", &J, PARAM_KIND_DOUBLE, 0, 0},
+    {"n", &nHB0, PARAM_KIND_DOUBLE, 0, 0},
+    {"nHB", &nHB0, PARAM_KIND_DOUBLE, 0, 0}
+  };
+  return parseCaseParams(params_file, params,
+                         sizeof(params)/sizeof(params[0]));
+}
 
 /**
 ### main()
@@ -81,22 +101,37 @@ int main(int argc, char const *argv[]) {
 
   dtmax = 1e-5;
 
-  L0 = 4.0;
-
   // Values taken from the terminal
   MAXlevel = 8;
+  Ldomain = 4.0;
   tmax = 4.0;
   We = 5.0;
-  Oh = 1e-2;
-  Oha = 1e-2 * Oh;
-  De = 1.0;
+  Ohs = 1e-2;
+  Oha = 1e-2 * Ohs;
+  Ohp = 1.0;
   Ec = 1.0;
   J = 1e-1;
   nHB0 = 1.0;
 
+  if (argc > 2) {
+    fprintf(ferr, "Usage: %s [params_file]\n", argv[0]);
+    return 1;
+  }
+  if (argc == 2 && !loadInputParams(argv[1]))
+    return 1;
+
+  if (Ec == 0.) {
+    fprintf(ferr, "Ec must be non-zero for EVP-HB case.\n");
+    return 1;
+  }
+
+  De = Ohp/Ec;
+  L0 = Ldomain;
+
   init_grid (1 << 4);
 
-  // Create a folder named intermediate where all the simulation snapshots are stored.
+  // Create a folder named intermediate where all the simulation
+  // snapshots are stored.
   char comm[80];
   sprintf (comm, "mkdir -p intermediate");
   system(comm);
@@ -105,7 +140,7 @@ int main(int argc, char const *argv[]) {
 
 
   rho1 = 1., rho2 = 1e-3;
-  mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
+  mu1 = Ohs/sqrt(We), mu2 = Oha/sqrt(We);
   G1 = Ec/We, G2 = 0.0;
   lambda1 = De*sqrt(We), lambda2 = 0.0;
   tau01 = J, tau02 = 0.0;
@@ -171,9 +206,9 @@ Prints summary parameters at completion.
 event end (t = end) {
   if (pid() == 0)
     fprintf(ferr,
-            "Level %d, Oh %2.1e, We %2.1e, Oha %2.1e, "
-            "De %2.1e, Ec %2.1e, J %2.1e, nHB %2.1e\n",
-            MAXlevel, Oh, We, Oha, De, Ec, J, nHB0);
+            "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
+            "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
+            MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
 }
 
 /**
@@ -199,14 +234,14 @@ event logWriting (i++) {
 
     if (i == 0) {
       fprintf(ferr,
-              "Level %d, Oh %2.1e, We %2.1e, Oha %2.1e, "
-              "De %2.1e, Ec %2.1e, J %2.1e, nHB %2.1e\n",
-              MAXlevel, Oh, We, Oha, De, Ec, J, nHB0);
+              "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
+              "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
+              MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
       fprintf(ferr, "i dt t ke\n");
       fprintf(fp,
-              "Level %d, Oh %2.1e, We %2.1e, Oha %2.1e, "
-              "De %2.1e, Ec %2.1e, J %2.1e, nHB %2.1e\n",
-              MAXlevel, Oh, We, Oha, De, Ec, J, nHB0);
+              "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
+              "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
+              MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
       fprintf(fp, "i dt t ke rM\n");
     }
 

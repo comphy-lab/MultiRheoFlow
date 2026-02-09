@@ -38,10 +38,18 @@ qcc -O2 -Wall -disable-dimensions -I$PWD/src-local file.c -o executable -lm
 # Run simulation cases
 cd simulationCases && make case_name.tst
 cd simulationCases && bash runCases.sh case_name
+cd simulationCases && bash runCases.sh case_name custom.params
 
 # Cleanup
 cd simulationCases && bash cleanup.sh case_name
 ```
+
+For drop-impact variants, `runCases.sh` auto-loads defaults when no
+params file is provided:
+
+- `dropImpact` -> `default-VE.params`
+- `dropImpact-EVP` -> `default-EVP.params`
+- `dropImpact-EVP-HB` -> `default-EVP-HB.params`
 
 ## Documentation
 - Do not edit `.github/docs/` directly (auto-generated)

@@ -1,13 +1,13 @@
 /**
-# Drop Impact
+# Drop Impact (EVP)
 
-Simulates viscoelastic drop impact on a solid surface using the
+Simulates elasto-viscoplastic drop impact on a solid surface using the
 Basilisk two-phase solver and log-conformation rheology.
 
 ## Author
 Vatsal Sanjay (vatsal.sanjay@comphy-lab.org)
 CoMPhy Lab
-Date: Oct 18, 2024
+Date: Feb 09, 2026
 */
 
 #include "axi.h"
@@ -15,22 +15,16 @@ Date: Oct 18, 2024
 // #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 
-#define VANILLA 0
-#if VANILLA
-#include "log-conform-viscoelastic.h"
-#define logFile "logAxi-vanilla.dat"
-#else
 #if AXI
-#include "log-conform-viscoelastic-scalar-2D.h"
-#define logFile "logAxi-scalar.dat"
+#include "log-conform-elastoviscoplastic-scalar-2D.h"
+#define logFile "logAxi-EVP-scalar.dat"
 #else
-#include "log-conform-viscoelastic-scalar-3D.h"
-#define logFile "log3D-scalar.dat"
-#endif
+#include "log-conform-elastoviscoplastic-scalar-3D.h"
+#define logFile "log3D-EVP-scalar.dat"
 #endif
 
 #define FILTERED // Smear density and viscosity jumps
-#include "two-phaseVE.h"
+#include "two-phaseEVP.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"
@@ -130,11 +124,11 @@ int main(int argc, char const *argv[]) {
   // Name of the restart file. See writingFiles event.
   sprintf (dumpFile, "restart");
 
-
   rho1 = 1., rho2 = 1e-3;
   mu1 = Ohs/sqrt(We), mu2 = Oha/sqrt(We);
   G1 = Ec/We, G2 = 0.0;
   lambda1 = De*sqrt(We), lambda2 = 0.0;
+  tau01 = 0.0, tau02 = 0.0;
 
   f.sigma = 1.0/We;
 

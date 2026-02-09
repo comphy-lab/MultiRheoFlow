@@ -42,10 +42,16 @@ flow scenarios.
 ## Test Cases
 
 - `simulationCases/dropImpact.c`
+- `simulationCases/dropImpact-EVP.c`
+- `simulationCases/dropImpact-EVP-HB.c`
 - `simulationCases/dropAtomisation.c`
 - `simulationCases/pinchOff.c`
 - `simulationCases/testEigenDecomposition.c`
-- Parameter files such as `simulationCases/Bo0.0010.dat`
+- Parameter files such as:
+  - `simulationCases/default-VE.params`
+  - `simulationCases/default-EVP.params`
+  - `simulationCases/default-EVP-HB.params`
+  - `simulationCases/Bo0.0010.dat`
 
 ## Repository Structure
 
@@ -92,7 +98,31 @@ CFLAGS=-DDISPLAY=-1 make dropImpact.tst
 ```bash
 cd simulationCases
 bash runCases.sh dropImpact
+bash runCases.sh dropImpact-EVP
+bash runCases.sh dropImpact-EVP-HB
 bash cleanup.sh dropImpact
+```
+
+`runCases.sh` uses case-specific defaults when no parameter file is
+provided:
+
+- `dropImpact` -> `default-VE.params`
+- `dropImpact-EVP` -> `default-EVP.params`
+- `dropImpact-EVP-HB` -> `default-EVP-HB.params`
+
+Parameter keys:
+
+- VE and EVP: `MAXlevel`, `Ldomain` (or `L0`), `tmax`, `We`, `Ohs`,
+  `Oha`, `De`, `Ec`
+- EVP-HB: `MAXlevel`, `Ldomain` (or `L0`), `tmax`, `We`, `Ohs`, `Oha`,
+  `Ohp`, `Ec`, `J`, `n` (or `nHB`)
+  - `De` is computed internally as `De = Ohp/Ec`
+
+You can also override defaults by passing a parameter file:
+
+```bash
+cd simulationCases
+bash runCases.sh dropImpact-EVP-HB my-custom.params
 ```
 
 ### Compile and Run from CLI

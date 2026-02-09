@@ -15,6 +15,7 @@
 - Compile with custom headers: `qcc -O2 -Wall -disable-dimensions -I$PWD/src-local file.c -o executable -lm`
 - Run a case with make: `cd simulationCases && make case_name.tst`
 - Run a case with helper script: `cd simulationCases && bash runCases.sh case_name`
+- Run a case with custom params: `cd simulationCases && bash runCases.sh case_name custom.params`
 - Cleanup case output: `cd simulationCases && bash cleanup.sh case_name`
 - Generate documentation (no deploy): `bash .github/scripts/build.sh`
 

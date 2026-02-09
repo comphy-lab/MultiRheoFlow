@@ -1,0 +1,11 @@
+# Drop impact (VE) default parameters
+
+MAXlevel = 8
+Ldomain = 4.0
+tmax = 4.0
+
+We = 5.0
+Ohs = 1e-2
+Oha = 1e-4
+De = 1.0
+Ec = 1.0
