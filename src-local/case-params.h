@@ -10,6 +10,7 @@ cases.
 
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,8 +104,17 @@ static int parseCaseParams (const char * filename, paramEntry * entries,
         char * end = NULL;
         long parsed = strtol(value, &end, 10);
         if (errno || !end || *end != '\0') {
-          fprintf(ferr, "Invalid integer for %s at line %d in %s\n", key,
-                  line_no, filename);
+          fprintf(ferr,
+                  "Invalid integer for %s at line %d in %s\n",
+                  key, line_no, filename);
+          fclose(fp);
+          return 0;
+        }
+        if (parsed < INT_MIN || parsed > INT_MAX) {
+          fprintf(ferr,
+                  "Integer out of range for %s at line %d"
+                  " in %s\n",
+                  key, line_no, filename);
           fclose(fp);
           return 0;
         }
