@@ -8,7 +8,7 @@ log-conformation rheology.
 ## Change Log
 
 - 2025-06-30: Add support for EVP simulations.
-- 2026-02-09: Add support for HB exponent transport.
+- 2026-02-09: Add support for HB.
 
 ## Two-Phase Interfacial Flows
 

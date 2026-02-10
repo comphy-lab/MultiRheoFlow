@@ -129,7 +129,7 @@ $n_{HB}$. The solvent viscosity
 $\mu_s$ is defined in the [Navier-Stokes
 solver](navier-stokes/centered.h).
 
-Gp, lambda and tau_y are defined in [two-phaseEVP.h](two-phaseEVP.h).
+Gp, lambda, tau_y and nHB are defined in [two-phaseEVP-HB.h](two-phaseEVP-HB.h).
 */
 
 /**

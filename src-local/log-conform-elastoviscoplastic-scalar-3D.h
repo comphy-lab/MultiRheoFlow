@@ -211,6 +211,9 @@ scalar T11[], T22[], T33[];
 scalar T12[], T13[], T23[];
 
 event defaults (i = 0) {
+  if (saramito_yield_eps < 1e-16)
+    saramito_yield_eps = 1e-16;
+
   if (is_constant (a.x))
     a = new face vector;
 
