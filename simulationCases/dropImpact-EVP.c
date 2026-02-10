@@ -46,8 +46,8 @@ Date: Feb 09, 2026
 #define KErr (1e-6)
 #define VelErr (1e-2)
 
-#define xDist (5e-2)
-#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
+#define x_dist (5e-2)
+#define R2(x, y, z) (sq(x - 1. - x_dist) + sq(y) + sq(z))
 
 /**
 ## Boundary Conditions
@@ -56,7 +56,7 @@ Left boundary uses free-slip for faster testing.
 */
 f[left] = dirichlet(0.0);
 
-int MAXlevel;
+int max_level;
 /**
 ## Dimensionless Groups
 
@@ -67,14 +67,14 @@ int MAXlevel;
 - `Ec`: Elasto-capillary number
 */
 
-double We, Ohs, Oha, De, Ec, tmax, Ldomain;
-char nameOut[80], dumpFile[80];
+double We, Ohs, Oha, De, Ec, tmax, l_domain;
+char name_out[80], dump_file[80];
 
 static int loadInputParams (const char * params_file) {
   paramEntry params[] = {
-    {"MAXlevel", &MAXlevel, PARAM_KIND_INT, 0, 0},
-    {"Ldomain", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
-    {"L0", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+    {"MAXlevel", &max_level, PARAM_KIND_INT, 0, 0},
+    {"Ldomain", &l_domain, PARAM_KIND_DOUBLE, 0, 0},
+    {"L0", &l_domain, PARAM_KIND_DOUBLE, 0, 0},
     {"tmax", &tmax, PARAM_KIND_DOUBLE, 0, 0},
     {"We", &We, PARAM_KIND_DOUBLE, 0, 0},
     {"Ohs", &Ohs, PARAM_KIND_DOUBLE, 0, 0},
@@ -96,8 +96,8 @@ int main(int argc, char const *argv[]) {
   dtmax = 1e-5;
 
   // Values taken from the terminal
-  MAXlevel = 8;
-  Ldomain = 4.0;
+  max_level = 8;
+  l_domain = 4.0;
   tmax = 4.0;
   We = 5.0;
   Ohs = 1e-2;
@@ -109,10 +109,13 @@ int main(int argc, char const *argv[]) {
     fprintf(ferr, "Usage: %s [params_file]\n", argv[0]);
     return 1;
   }
-  if (argc == 2 && !loadInputParams(argv[1]))
+  if (argc == 2 && !loadInputParams(argv[1])) {
+    fprintf(ferr, "Error: failed to load params from '%s'\n",
+            argv[1]);
     return 1;
+  }
 
-  L0 = Ldomain;
+  L0 = l_domain;
 
   init_grid (1 << 4);
 
@@ -122,7 +125,7 @@ int main(int argc, char const *argv[]) {
   sprintf (comm, "mkdir -p intermediate");
   system(comm);
   // Name of the restart file. See writingFiles event.
-  sprintf (dumpFile, "restart");
+  sprintf (dump_file, "restart");
 
   rho1 = 1., rho2 = 1e-3;
   mu1 = Ohs/sqrt(We), mu2 = Oha/sqrt(We);
@@ -137,8 +140,9 @@ int main(int argc, char const *argv[]) {
 }
 
 event init (t = 0) {
-  if (!restore (file = dumpFile)){
-   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9) && level < MAXlevel);
+  if (!restore (file = dump_file)){
+   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9)
+          && level < max_level);
    fraction (f, (1-R2(x,y,z)));
    foreach(){
     u.x[] = -f[]*1.0;
@@ -161,11 +165,11 @@ event adapt(i++){
   }
   adapt_wavelet ((scalar *){f, u.x, u.y, u.z, KAPPA},
       (double[]){fErr, VelErr, VelErr, VelErr, KErr},
-      MAXlevel, 4);
+      max_level, 4);
 #else
   adapt_wavelet ((scalar *){f, u.x, u.y, KAPPA},
       (double[]){fErr, VelErr, VelErr, KErr},
-      MAXlevel, 4);
+      max_level, 4);
 #endif
 
 }
@@ -177,9 +181,9 @@ Writes restart and time-stamped snapshot dumps.
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
   p.nodump = false;
-  dump (file = dumpFile);
-  sprintf (nameOut, "intermediate/snapshot-%5.4f", t);
-  dump(file=nameOut);
+  dump (file = dump_file);
+  sprintf (name_out, "intermediate/snapshot-%5.4f", t);
+  dump(file=name_out);
 }
 
 /**
@@ -192,7 +196,7 @@ event end (t = end) {
     fprintf(ferr,
             "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
             "De %2.1e, Ec %2.1e\n",
-            MAXlevel, Ohs, We, Oha, De, Ec);
+            max_level, Ohs, We, Oha, De, Ec);
 }
 
 /**
@@ -220,12 +224,12 @@ event logWriting (i++) {
       fprintf(ferr,
               "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
               "De %2.1e, Ec %2.1e\n",
-              MAXlevel, Ohs, We, Oha, De, Ec);
+              max_level, Ohs, We, Oha, De, Ec);
       fprintf(ferr, "i dt t ke\n");
       fprintf(fp,
               "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
               "De %2.1e, Ec %2.1e\n",
-              MAXlevel, Ohs, We, Oha, De, Ec);
+              max_level, Ohs, We, Oha, De, Ec);
       fprintf(fp, "i dt t ke rM\n");
     }
 
@@ -251,7 +255,7 @@ event logWriting (i++) {
       fflush(fp);
       fclose(fp);
 
-      dump(file=dumpFile);
+      dump(file=dump_file);
       return 1;
     }
   }

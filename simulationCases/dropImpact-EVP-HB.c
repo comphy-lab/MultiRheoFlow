@@ -31,6 +31,8 @@ Date: Oct 18, 2024
 #include "tension.h"
 #include "case-params.h"
 
+#include <errno.h>
+
 /**
 ## Output Cadence
 */
@@ -47,8 +49,8 @@ Date: Oct 18, 2024
 #define KErr (1e-6)
 #define VelErr (1e-2)
 
-#define xDist (5e-2)
-#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
+#define x_dist (5e-2)
+#define R2(x, y, z) (sq(x - 1. - x_dist) + sq(y) + sq(z))
 
 /**
 ## Boundary Conditions
@@ -57,7 +59,7 @@ Left boundary uses free-slip for faster testing.
 */
 f[left] = dirichlet(0.0);
 
-int MAXlevel;
+int max_level;
 /**
 ## Dimensionless Groups
 
@@ -70,23 +72,23 @@ int MAXlevel;
 - `n`: HB flow index
 */
 
-double We, Ohs, Oha, Ohp, De, Ec, J, nHB0, tmax, Ldomain;
-char nameOut[80], dumpFile[80];
+double We, Ohs, Oha, ohp, De, Ec, J, n_hb0, tmax, l_domain;
+char name_out[80], dump_file[80];
 
 static int loadInputParams (const char * params_file) {
   paramEntry params[] = {
-    {"MAXlevel", &MAXlevel, PARAM_KIND_INT, 0, 0},
-    {"Ldomain", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
-    {"L0", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+    {"MAXlevel", &max_level, PARAM_KIND_INT, 0, 0},
+    {"Ldomain", &l_domain, PARAM_KIND_DOUBLE, 0, 0},
+    {"L0", &l_domain, PARAM_KIND_DOUBLE, 0, 0},
     {"tmax", &tmax, PARAM_KIND_DOUBLE, 0, 0},
     {"We", &We, PARAM_KIND_DOUBLE, 0, 0},
     {"Ohs", &Ohs, PARAM_KIND_DOUBLE, 0, 0},
     {"Oha", &Oha, PARAM_KIND_DOUBLE, 0, 0},
-    {"Ohp", &Ohp, PARAM_KIND_DOUBLE, 0, 0},
+    {"Ohp", &ohp, PARAM_KIND_DOUBLE, 0, 0},
     {"Ec", &Ec, PARAM_KIND_DOUBLE, 0, 0},
     {"J", &J, PARAM_KIND_DOUBLE, 0, 0},
-    {"n", &nHB0, PARAM_KIND_DOUBLE, 0, 0},
-    {"nHB", &nHB0, PARAM_KIND_DOUBLE, 0, 0}
+    {"n", &n_hb0, PARAM_KIND_DOUBLE, 0, 0},
+    {"nHB", &n_hb0, PARAM_KIND_DOUBLE, 0, 0}
   };
   return parseCaseParams(params_file, params,
                          sizeof(params)/sizeof(params[0]));
@@ -102,31 +104,34 @@ int main(int argc, char const *argv[]) {
   dtmax = 1e-5;
 
   // Values taken from the terminal
-  MAXlevel = 8;
-  Ldomain = 4.0;
+  max_level = 8;
+  l_domain = 4.0;
   tmax = 4.0;
   We = 5.0;
   Ohs = 1e-2;
   Oha = 1e-2 * Ohs;
-  Ohp = 1.0;
+  ohp = 1.0;
   Ec = 1.0;
   J = 1e-1;
-  nHB0 = 1.0;
+  n_hb0 = 1.0;
 
   if (argc > 2) {
     fprintf(ferr, "Usage: %s [params_file]\n", argv[0]);
     return 1;
   }
-  if (argc == 2 && !loadInputParams(argv[1]))
+  if (argc == 2 && !loadInputParams(argv[1])) {
+    fprintf(ferr, "Error: failed to load params from '%s'\n",
+            argv[1]);
     return 1;
+  }
 
   if (Ec == 0.) {
     fprintf(ferr, "Ec must be non-zero for EVP-HB case.\n");
     return 1;
   }
 
-  De = Ohp/Ec;
-  L0 = Ldomain;
+  De = ohp/Ec;
+  L0 = l_domain;
 
   init_grid (1 << 4);
 
@@ -136,7 +141,7 @@ int main(int argc, char const *argv[]) {
   sprintf (comm, "mkdir -p intermediate");
   system(comm);
   // Name of the restart file. See writingFiles event.
-  sprintf (dumpFile, "restart");
+  sprintf (dump_file, "restart");
 
 
   rho1 = 1., rho2 = 1e-3;
@@ -144,7 +149,7 @@ int main(int argc, char const *argv[]) {
   G1 = Ec/We, G2 = 0.0;
   lambda1 = De*sqrt(We), lambda2 = 0.0;
   tau01 = J, tau02 = 0.0;
-  nHB1 = nHB0, nHB2 = 1.0;
+  nHB1 = n_hb0, nHB2 = 1.0;
 
   f.sigma = 1.0/We;
 
@@ -153,8 +158,9 @@ int main(int argc, char const *argv[]) {
 }
 
 event init (t = 0) {
-  if (!restore (file = dumpFile)){
-   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9) && level < MAXlevel);
+  if (!restore (file = dump_file)){
+   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9)
+          && level < max_level);
    fraction (f, (1-R2(x,y,z)));
    foreach(){
     u.x[] = -f[]*1.0;
@@ -177,11 +183,11 @@ event adapt(i++){
   }
   adapt_wavelet ((scalar *){f, u.x, u.y, u.z, KAPPA},
       (double[]){fErr, VelErr, VelErr, VelErr, KErr},
-      MAXlevel, 4);
+      max_level, 4);
 #else
   adapt_wavelet ((scalar *){f, u.x, u.y, KAPPA},
       (double[]){fErr, VelErr, VelErr, KErr},
-      MAXlevel, 4);
+      max_level, 4);
 #endif
 
 }
@@ -193,9 +199,9 @@ Writes restart and time-stamped snapshot dumps.
 */
 event writingFiles (t = 0; t += tsnap; t <= tmax) {
   p.nodump = false;
-  dump (file = dumpFile);
-  sprintf (nameOut, "intermediate/snapshot-%5.4f", t);
-  dump(file=nameOut);
+  dump (file = dump_file);
+  sprintf (name_out, "intermediate/snapshot-%5.4f", t);
+  dump(file=name_out);
 }
 
 /**
@@ -207,8 +213,10 @@ event end (t = end) {
   if (pid() == 0)
     fprintf(ferr,
             "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
-            "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
-            MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
+            "ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,"
+            " n %2.1e\n",
+            max_level, Ohs, We, Oha, ohp, De, Ec, J,
+            n_hb0);
 }
 
 /**
@@ -228,20 +236,25 @@ event logWriting (i++) {
     const char* mode = (i == 0) ? "w" : "a";
     fp = fopen(logFile, mode);
     if (fp == NULL) {
-      fprintf(ferr, "Error opening log file\n");
+      fprintf(ferr, "Error opening log file '%s': %s\n",
+              logFile, strerror(errno));
       return 1;
     }
 
     if (i == 0) {
       fprintf(ferr,
               "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
-              "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
-              MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
+              "ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,"
+              " n %2.1e\n",
+              max_level, Ohs, We, Oha, ohp, De, Ec, J,
+              n_hb0);
       fprintf(ferr, "i dt t ke\n");
       fprintf(fp,
               "Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, "
-              "Ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e, n %2.1e\n",
-              MAXlevel, Ohs, We, Oha, Ohp, De, Ec, J, nHB0);
+              "ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,"
+              " n %2.1e\n",
+              max_level, Ohs, We, Oha, ohp, De, Ec, J,
+              n_hb0);
       fprintf(fp, "i dt t ke rM\n");
     }
 
@@ -263,11 +276,16 @@ event logWriting (i++) {
       fprintf(ferr, "%s", message);
 
       fp = fopen("log", "a");
+      if (fp == NULL) {
+        fprintf(ferr, "Error opening log file 'log': %s\n",
+                strerror(errno));
+        return 1;
+      }
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
 
-      dump(file=dumpFile);
+      dump(file=dump_file);
       return 1;
     }
   }
