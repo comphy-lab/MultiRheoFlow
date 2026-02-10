@@ -1,13 +1,14 @@
 /**
-# Log-Conformation (Scalar 3D EVP)
+# Log-Conformation (Scalar 3D EVP-HB)
 
-Scalar log-conformation implementation for 3D elasto-viscoplastic flows.
+Scalar log-conformation implementation for 3D elasto-viscoplastic
+Herschel-Bulkley flows.
 
 ## Key Features
 
 - 3D scalar conformation components.
 - Eigenvalue clamping for numerical stability.
-- Plasticity relaxation module (Saramito 2007).
+- Plasticity relaxation module (HB).
 
 ## Dependencies
 
@@ -26,6 +27,7 @@ Scalar log-conformation implementation for 3D elasto-viscoplastic flows.
 - 2024-11-23: Documentation updates.
 - 2025-03-16: Eigenvalue clamping and stability fixes.
 - 2025-06-30: Plasticity relaxation module.
+- 2026-02-09: Add HB variant with `nHB` and HB relaxation factor.
 
 ## Notes
 
@@ -50,7 +52,7 @@ Last updated: 2025-06-30
 #endif
 
 /**
-# The log-conformation method for some elasto-viscoplastic constitutive models
+# The log-conformation method for EVP-HB constitutive models
 
 ## Introduction
 
@@ -88,20 +90,32 @@ $$
 where $D_t$ denotes the material derivative and
 $\mathbf{f_r}(\cdot)$ is the relaxation function. Here, $\lambda$ is the relaxation time.
 
-In the case of Saramito (2007) elasto-viscoplastic model, where the
+In the case of elasto-viscoplastic Herschel-Bulkley (HB) model, where the
 material before yielding is represented by Kelvin-Voigt viscoelastic solid and
 long after yielding recovers the Oldroyd-B type viscoelastic fluid behaviour,
  $\mathbf{f}_s (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
- $\mathbf{f}_r (\mathbf{A}) = \mathcal{F}(\mathbf{A} -\mathbf{I})$,
+ $\mathbf{f}_r (\mathbf{A}) = K_{HB}(\mathbf{A} -\mathbf{I})$,
 and the above equations can be combined to avoid the use of
 $\mathbf{A}$
 $$
-(\mathcal{F}/\lambda) \mathbf{T} + (D_t \mathbf{T} -
+(K_{HB}/\lambda) \mathbf{T} + (D_t \mathbf{T} -
 \mathbf{T} \cdot \nabla \mathbf{u} -
 \nabla \mathbf{u}^{T} \cdot \mathbf{T})  = 2 G_p\lambda \mathbf{D}
 $$
 
-Here, $\mathcal{F} = max(0., \frac{\|\tau_d\|-\tau_y}{\|\tau_d\|}$.
+Here,
+$$
+K_{HB} = max\left[0,
+\left(\frac{\|\tau_d\|-\tau_y}
+{(G_p\lambda)^{1-n_{HB}} \|\tau_d\|}\right)^{1/n_{HB}}\right]
+$$
+where $n_{HB}=1$ recovers the Saramito yield factor.
+The stress closure is
+$$
+\mathbf{\tau}_p = \frac{Oh_p}{De}(\mathbf{A}-\mathbf{I}),
+\quad Oh_p = G_p\lambda
+$$
+which is implemented as $\mathbf{T} = G_p(\mathbf{A}-\mathbf{I})$.
 [Comminal et al. (2015)](#comminal2015) gathered the functions
 $\mathbf{f}_s (\mathbf{A})$ and $\mathbf{f}_r (\mathbf{A})$ for
 different viscoelastic constitutive models. This work is an extension
@@ -110,11 +124,12 @@ of such formulation for elasto-viscoplastic materials.
 ## Parameters
 
 The primary parameters are the relaxation time
-$\lambda$ and the elastic modulus $G_p$. The solvent viscosity
+$\lambda$, elastic modulus $G_p$, yield stress $\tau_y$ and HB exponent
+$n_{HB}$. The solvent viscosity
 $\mu_s$ is defined in the [Navier-Stokes
 solver](navier-stokes/centered.h).
 
-Gp and lambda are defined in [two-phaseVE.h](two-phaseVE.h).
+Gp, lambda, tau_y and nHB are defined in [two-phaseEVP-HB.h](two-phaseEVP-HB.h).
 */
 
 /**
@@ -195,7 +210,8 @@ static int eigenvalue_corrections = 0;
 (const) scalar Gp = unity; // elastic modulus
 (const) scalar lambda = unity; // relaxation time
 (const) scalar tau0 = unity; // yield-stress
-double saramito_yield_eps = 1e-6; // regularization for yield factor denominator
+(const) scalar nHB = unity; // HB power-law exponent
+double saramitoHB_yield_eps = 1e-6; // regularization for HB denominator
 
 /*
 conformation tensor */
@@ -211,9 +227,6 @@ scalar T11[], T22[], T33[];
 scalar T12[], T13[], T23[];
 
 event defaults (i = 0) {
-  if (saramito_yield_eps < 1e-16)
-    saramito_yield_eps = 1e-16;
-
   if (is_constant (a.x))
     a = new face vector;
 
@@ -566,9 +579,13 @@ event tracer_advection(i++)
     */
 
     double tauD = sqrt(0.25*(T11[] - T22[])*(T11[] - T22[]) + T12[]*T12[]);
-    double yieldFactor =
-      max(0., (tauD - tau0[])/(tauD + saramito_yield_eps)); // $\mathcal{F}$
-    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
+    double nHB_loc = max(nHB[], 1e-12);
+    double ohp = max(fabs(Gp[]*lambda[]), saramitoHB_yield_eps);
+    double hbArgument = (tauD - tau0[])/
+      (pow(ohp, 1. - nHB_loc)*(tauD + saramitoHB_yield_eps));
+    double KHB = max(0., pow(max(hbArgument, 0.), 1./nHB_loc)); // $K_{HB}$
+    double intFactor = (lambda[] != 0. ?
+      (lambda[] == 1e30 ? 1: exp(-dt*KHB/lambda[])): 0.);
 
     A.x.y *= intFactor;
     foreach_dimension()
@@ -896,9 +913,13 @@ event tracer_advection(i++)
     // Apply relaxation using the relaxation time lambda
 
     double tauD = sqrt((1./6.)*((T11[] - T22[])*(T11[] - T22[])+(T22[] - T33[])*(T22[] - T33[])+(T33[] - T11[])*(T33[] - T11[])) + 3.*(T12[]*T12[] + T23[]*T23[] + T13[]*T13[]));
-    double yieldFactor =
-      max(0., (tauD - tau0[])/(tauD + saramito_yield_eps)); // $\mathcal{F}$
-    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt*yieldFactor/lambda[])): 0.);
+    double nHB_loc = max(nHB[], 1e-12);
+    double ohp = max(fabs(Gp[]*lambda[]), saramitoHB_yield_eps);
+    double hbArgument = (tauD - tau0[])/
+      (pow(ohp, 1. - nHB_loc)*(tauD + saramitoHB_yield_eps));
+    double KHB = max(0., pow(max(hbArgument, 0.), 1./nHB_loc)); // $K_{HB}$
+    double intFactor = (lambda[] != 0. ?
+      (lambda[] == 1e30 ? 1: exp(-dt*KHB/lambda[])): 0.);
 
     A.x.y *= intFactor;
     A.y.x = A.x.y;
