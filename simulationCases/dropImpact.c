@@ -76,22 +76,6 @@ int MAXlevel;
 double We, Ohs, Oha, De, Ec, tmax, Ldomain;
 char nameOut[80], dumpFile[80];
 
-static int loadInputParams (const char * params_file) {
-  paramEntry params[] = {
-    {"MAXlevel", &MAXlevel, PARAM_KIND_INT, 0, 0},
-    {"Ldomain", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
-    {"L0", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
-    {"tmax", &tmax, PARAM_KIND_DOUBLE, 0, 0},
-    {"We", &We, PARAM_KIND_DOUBLE, 0, 0},
-    {"Ohs", &Ohs, PARAM_KIND_DOUBLE, 0, 0},
-    {"Oha", &Oha, PARAM_KIND_DOUBLE, 0, 0},
-    {"De", &De, PARAM_KIND_DOUBLE, 0, 0},
-    {"Ec", &Ec, PARAM_KIND_DOUBLE, 0, 0}
-  };
-  return parseCaseParams(params_file, params,
-                         sizeof(params)/sizeof(params[0]));
-}
-
 /**
 ### main()
 
@@ -115,8 +99,25 @@ int main(int argc, char const *argv[]) {
     fprintf(ferr, "Usage: %s [params_file]\n", argv[0]);
     return 1;
   }
-  if (argc == 2 && !loadInputParams(argv[1]))
-    return 1;
+  if (argc == 2) {
+    paramEntry params[] = {
+      {"MAXlevel", &MAXlevel, PARAM_KIND_INT, 0, 0},
+      {"Ldomain", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+      {"L0", &Ldomain, PARAM_KIND_DOUBLE, 0, 0},
+      {"tmax", &tmax, PARAM_KIND_DOUBLE, 0, 0},
+      {"We", &We, PARAM_KIND_DOUBLE, 0, 0},
+      {"Ohs", &Ohs, PARAM_KIND_DOUBLE, 0, 0},
+      {"Oha", &Oha, PARAM_KIND_DOUBLE, 0, 0},
+      {"De", &De, PARAM_KIND_DOUBLE, 0, 0},
+      {"Ec", &Ec, PARAM_KIND_DOUBLE, 0, 0}
+    };
+    int oha_idx = 6;
+    if (!parseCaseParams(argv[1], params,
+                         sizeof(params)/sizeof(params[0])))
+      return 1;
+    if (!params[oha_idx].seen)
+      Oha = 1e-2 * Ohs;
+  }
 
   L0 = Ldomain;
 
