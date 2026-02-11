@@ -171,7 +171,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>Simulation Cases | Documentation</title>
+  <title>default-VE.params | MultiRheoFlow</title>
   
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -202,25 +202,25 @@
   </style>
 
   <!-- Critical Meta Tags -->
-  <meta name="description" content="Documentation for the CoMPhy-Lab computational fluid dynamics framework.">
+  <meta name="description" content="MAXlevel = 8 Ldomain = 4.0 tmax = 4.0 We = 5.0 Ohs = 1e-2 Oha = 1e-4 De = 1.0 Ec = 1.0">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="fluid dynamics, CFD, Basilisk, simulationCases, documentation">
+  <meta name="keywords" content="default">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
 
   <!-- Preload critical resources -->
-  <link rel="preload" href="../assets/js/main.js" as="script">
-  <link rel="preload" href="../assets/css/fontello/css/fontello.css" as="style">
-  <link rel="preload" href="../assets/css/academicons-1.7.0/css/academicons.min.css" as="style">
+  <link rel="preload" href="./assets/js/main.js" as="script">
+  <link rel="preload" href="./assets/css/fontello/css/fontello.css" as="style">
+  <link rel="preload" href="./assets/css/academicons-1.7.0/css/academicons.min.css" as="style">
 
   <!-- Base stylesheets -->
-  <link rel="stylesheet" href="../assets/css/styles.css">
-  <link rel="stylesheet" href="../assets/css/custom_styles.css">
-  <link rel="stylesheet" href="../assets/css/command-palette.css">
-  <link rel="stylesheet" href="../assets/css/fontello/css/fontello.css">
-  <link rel="stylesheet" href="../assets/css/academicons-1.7.0/css/academicons.min.css">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <link rel="stylesheet" href="./assets/css/custom_styles.css">
+  <link rel="stylesheet" href="./assets/css/command-palette.css">
+  <link rel="stylesheet" href="./assets/css/fontello/css/fontello.css">
+  <link rel="stylesheet" href="./assets/css/academicons-1.7.0/css/academicons.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
   <!-- Font optimization -->
@@ -233,28 +233,28 @@
   </style>
 
   <!-- Favicon -->
-  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="../assets/favicon/favicon-96x96.png">
-  <link rel="icon" type="image/svg+xml" href="../assets/favicon/favicon.svg">
-  <link rel="shortcut icon" href="../assets/favicon/favicon.ico">
-  <link rel="manifest" href="../assets/favicon/site.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="./assets/favicon/favicon-96x96.png">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg">
+  <link rel="shortcut icon" href="./assets/favicon/favicon.ico">
+  <link rel="manifest" href="./assets/favicon/site.webmanifest">
 
   <!-- Scripts with proper loading attributes -->
   <script>
-    window.ASSET_PATH_PREFIX = "..";
+    window.ASSET_PATH_PREFIX = ".";
   </script>
-  <script src="../assets/js/jquery.min.js"></script>
-  <script src="../assets/js/jquery-ui.packed.js"></script>
-  <script src="../assets/js/plots.js"></script>
+  <script src="./assets/js/jquery.min.js"></script>
+  <script src="./assets/js/jquery-ui.packed.js"></script>
+  <script src="./assets/js/plots.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
   <!-- Config script must load before other scripts -->
-  <script src="../assets/js/config.js"></script>
-  <script defer src="../assets/js/html-sanitizer.js"></script>
-  <script defer src="../assets/js/search-helper.js"></script>
-  <script defer src="../assets/js/command-palette.js"></script>
-  <script defer src="../assets/js/command-data.js"></script>
-  <script defer src="../assets/js/main.js"></script>
-  <script defer src="../assets/js/theme-toggle.js"></script>
+  <script src="./assets/js/config.js"></script>
+  <script defer src="./assets/js/html-sanitizer.js"></script>
+  <script defer src="./assets/js/search-helper.js"></script>
+  <script defer src="./assets/js/command-palette.js"></script>
+  <script defer src="./assets/js/command-data.js"></script>
+  <script defer src="./assets/js/main.js"></script>
+  <script defer src="./assets/js/theme-toggle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
   
   <!-- Optimize page load performance -->
@@ -299,7 +299,7 @@
         link.href = href;
         link.crossOrigin = 'anonymous';
         link.onerror = (e) => {
-          console.error(`Failed to load stylesheet: ${href}`, e);
+          console.error(`Failed to load stylesheet: `, e);
           console.log('Trying alternative Font Awesome source...');
         };
         document.head.appendChild(link);
@@ -340,6 +340,12 @@
   </script>
 </head>
 <body id="top">
+<script>
+window.repoName = "MultiRheoFlow";
+window.githubOrg = "comphy-lab";
+window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
+</script>
+
 
     <!-- Preloader with theme variables applied -->
     <div id="preloader">
@@ -356,7 +362,7 @@
         <header class="s-header">
             <div class="s-header__logo">
                 <a class="logo" href="/">
-                    <img src="../assets/logos/CoMPhy-Lab-no-name.png" alt="CoMPhy Lab">
+                    <img src="./assets/logos/CoMPhy-Lab-no-name.png" alt="CoMPhy Lab">
                 </a>
                 <a class="documentation-button" href="/MultiRheoFlow">
                     <i class="fa-solid fa-book-open"></i>
@@ -416,71 +422,46 @@
         <!-- Main content -->
         <main class="content">
             
-
             <div class="page-content">
-<h1>Simulation Cases</h1>
-
-<div class="documentation-section">
-<table class="documentation-files">
-<tr>
-  <td class="file-icon"><span class="file-other"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="cleanup.sh.html" class="doc-link-button">cleanup.sh</a></td>
-  <td class="file-desc">rm -rf \$1</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="dropAtomisation.c.html" class="doc-link-button">dropAtomisation.c</a></td>
-  <td class="file-desc">Simulates viscoelastic drop atomisation using the Basilisk two-phase solver and log-conformation rheology.</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="dropImpact-EVP-HB.c.html" class="doc-link-button">dropImpact-EVP-HB.c</a></td>
-  <td class="file-desc">Simulates elasto-viscoplastic Herschel-Bulkley drop impact on a solid surface using the Basilisk two-phase solver and...</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="dropImpact-EVP.c.html" class="doc-link-button">dropImpact-EVP.c</a></td>
-  <td class="file-desc">Simulates elasto-viscoplastic drop impact on a solid surface using the Basilisk two-phase solver and log-conformation...</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="dropImpact.c.html" class="doc-link-button">dropImpact.c</a></td>
-  <td class="file-desc">Simulates viscoelastic drop impact on a solid surface using the Basilisk two-phase solver and log-conformation rheology.</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="pinchOff.c.html" class="doc-link-button">pinchOff.c</a></td>
-  <td class="file-desc">Simulates viscoelastic jet pinch-off using the Basilisk two-phase solver and log-conformation rheology.</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-other"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="runCases.sh.html" class="doc-link-button">runCases.sh</a></td>
-  <td class="file-desc">set -euo pipefail if [ '\$' -lt 1 ] || [ '\$' -gt 2 ]; then echo 'Usage: \$0 casename [paramsfile]' exit 1 fi CASENAM...</td>
-</tr>
-<tr>
-  <td class="file-icon"><span class="file-c"></span></td>
-  <td class="file-link" style="padding-right: 2em;"><a href="testEigenDecomposition.c.html" class="doc-link-button">testEigenDecomposition.c</a></td>
-  <td class="file-desc">Validates computeeigensystemsymmetric3x3() using diagnostic checks for orthonormality, diagonalization, and reconstru...</td>
-</tr>
-</table>
-</div>
-
-</div>
+                
+                                <h1 class="page-title">default-VE.params</h1>
+                
+                                
+                                <div class="raw-file-button-container">
+                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/default-VE.params" class="raw-file-button" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-brands fa-github"></i> See raw file
+                    </a>
+                </div>
+                
+                <h1 id="default-ve.params">default-VE.params</h1>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode ini"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop impact (VE) default parameters</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">MAXlevel </span><span class="ot">=</span><span class="st"> </span><span class="dv">8</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Ldomain </span><span class="ot">=</span><span class="st"> </span><span class="fl">4.0</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">tmax </span><span class="ot">=</span><span class="st"> </span><span class="fl">4.0</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">We </span><span class="ot">=</span><span class="st"> </span><span class="fl">5.0</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Ohs </span><span class="ot">=</span><span class="st"> 1e-2</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Oha </span><span class="ot">=</span><span class="st"> 1e-4</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="dt">De </span><span class="ot">=</span><span class="st"> </span><span class="fl">1.0</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Ec </span><span class="ot">=</span><span class="st"> </span><span class="fl">1.0</span></span></code></pre></div></div>
+            </div>
         </main>
 
         <footer class="site-footer">
             <div class="footer-left">
               <a href="https://basilisk.fr/sandbox/vatsal/" target="_blank" rel="noopener noreferrer">
-                <img src="../assets/logos/logoBasilisk_TransparentBackground.png" alt="Basilisk C" class="footer-logo">
+                <img src="./assets/logos/logoBasilisk_TransparentBackground.png" alt="Basilisk C" class="footer-logo">
               </a>
               <a href="https://pof.tnw.utwente.nl/" target="_blank" rel="noopener noreferrer">
-                <img src="../assets/logos/LogoPof_transparent_white.png" alt="Physics of Fluids" class="footer-logo pof-logo">
+                <img src="./assets/logos/LogoPof_transparent_white.png" alt="Physics of Fluids" class="footer-logo pof-logo">
               </a>
               <a href="https://www.utwente.nl/" target="_blank" rel="noopener noreferrer">
-                <img src="../assets/logos/UT_Logo_2400_Sta_White_EN.png" alt="University of Twente" class="footer-logo">
+                <img src="./assets/logos/UT_Logo_2400_Sta_White_EN.png" alt="University of Twente" class="footer-logo">
               </a>
               <a href="https://www.vatsalsanjay.com/" target="_blank" rel="noopener noreferrer">
-                <img src="../assets/logos/Logo_Vatsal_v3_OutLine.png" alt="Vatsal Sanjay" class="footer-logo">
+                <img src="./assets/logos/Logo_Vatsal_v3_OutLine.png" alt="Vatsal Sanjay" class="footer-logo">
               </a>
             </div>
             <div class="footer-center">
@@ -506,8 +487,8 @@
               <a href="https://bsky.app/profile/comphy-lab.org" target="_blank" rel="noopener noreferrer" aria-label="Bluesky Profile">
                 <i class="fa-brands fa-bluesky" style="font-size: 2.5em; color: white;"></i>
               </a>
-              <a href="https://github.com/comphy-lab/MultiRheoFlow" class="edit-link" aria-label="Edit this page on GitHub">
-                <i class="fa-brands fa-github"></i> View repository
+              <a href="https://github.com/comphy-lab/MultiRheoFlow/edit/main/default-VE.params" class="edit-link" aria-label="Edit this page on GitHub">
+                <i class="fa-brands fa-github"></i> Edit this page
               </a>
             </div>
           </footer>
@@ -527,5 +508,75 @@
         </div>
     </div>
 
-</body>
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    // Add copy button to each code block container
+    const codeBlocks = document.querySelectorAll('.code-block-container pre');
+    codeBlocks.forEach(function(codeBlock, index) {
+        // Create button element
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.setAttribute('aria-label', 'Copy code to clipboard');
+        button.setAttribute('data-copy-state', 'copy');
+        
+        // Get the code block container (parent of the pre)
+        const container = codeBlock.parentNode;
+        
+        // Add the button to the container
+        container.appendChild(button);
+        
+        // Set up click event
+        button.addEventListener('click', async function() {
+            const codeText = codeBlock.textContent;
+            
+            try {
+                // Try to use the modern clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(codeText);
+                    updateButtonState(button, 'success');
+                } else {
+                    // Fall back to the deprecated execCommand method
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeText;
+                    textarea.style.position = 'fixed';  // Prevent scrolling to the bottom
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    if (successful) {
+                        updateButtonState(button, 'success');
+                    } else {
+                        updateButtonState(button, 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('Copy failed:', err);
+                updateButtonState(button, 'error');
+            }
+        });
+    });
+    
+    // Function to update button state
+    function updateButtonState(button, state) {
+        if (state === 'success') {
+            button.textContent = 'Copied!';
+            button.classList.add('copied');
+        } else if (state === 'error') {
+            button.textContent = 'Error!';
+            button.classList.add('error');
+        }
+        
+        // Reset button state after 2 seconds
+        setTimeout(function() {
+            button.textContent = 'Copy';
+            button.classList.remove('copied', 'error');
+        }, 2000);
+    }
+});
+</script>
+        </body>
 </html>

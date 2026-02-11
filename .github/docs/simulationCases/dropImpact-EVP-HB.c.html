@@ -171,7 +171,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>simulationCases/dropImpact.c | MultiRheoFlow</title>
+  <title>simulationCases/dropImpact-EVP-HB.c | MultiRheoFlow</title>
 
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -202,10 +202,10 @@
   </style>
 
   <!-- Critical Meta Tags -->
-  <meta name="description" content="Simulates viscoelastic drop impact on a solid surface using the Basilisk two-phase solver and log-conformation rheology.">
+  <meta name="description" content="Simulates elasto-viscoplastic Herschel-Bulkley drop impact on a solid surface using the Basilisk two-phase solver and log-conformation rheology.">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="axi.h, case-params.h, dropimpact, grid/octree.h, grid/quadtree.h, log-conform-viscoelastic.h, navier-stokes/centered.h, navier-stokes/conserving.h, tension.h, two-phaseve.h">
+  <meta name="keywords" content="axi.h, case-params.h, dropimpact, errno.h, grid/octree.h, grid/quadtree.h, log-conform-elastoviscoplastic-hb-scalar-3d.h, navier-stokes/centered.h, navier-stokes/conserving.h, tension.h">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
@@ -424,19 +424,19 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 
             <div class="page-content">
 
-                                <h1 class="page-title">simulationCases/dropImpact.c</h1>
+                                <h1 class="page-title">simulationCases/dropImpact-EVP-HB.c</h1>
 
 
                                 <div class="raw-file-button-container">
-                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/simulationCases/dropImpact.c" class="raw-file-button" target="_blank" rel="noopener noreferrer">
+                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/simulationCases/dropImpact-EVP-HB.c" class="raw-file-button" target="_blank" rel="noopener noreferrer">
                         <i class="fa-brands fa-github"></i> See raw file
                     </a>
                 </div>
 
-                <h1 id="drop-impact">Drop Impact</h1>
-                <p>Simulates viscoelastic drop impact on a solid surface
-                using the Basilisk two-phase solver and log-conformation
-                rheology.</p>
+                <h1 id="drop-impact-evp-hb">Drop Impact (EVP-HB)</h1>
+                <p>Simulates elasto-viscoplastic Herschel-Bulkley drop
+                impact on a solid surface using the Basilisk two-phase
+                solver and log-conformation rheology.</p>
                 <h2 id="author">Author</h2>
                 <p>Vatsal Sanjay (vatsal.sanjay@comphy-lab.org) CoMPhy
                 Lab Date: Oct 18, 2024</p>
@@ -446,26 +446,22 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// #include &quot;grid/quadtree.h&quot;</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="https://basilisk.fr/src/navier-stokes/centered.h" title="Link to Basilisk source for navier-stokes/centered.h"><span class="im">"navier-stokes/centered.h"</span></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define VANILLA</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#if VANILLA</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for log-conform-viscoelastic.h"><span class="im">"log-conform-viscoelastic.h"</span></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define logFile &quot;logAxi-vanilla.dat&quot;</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-2D.h"><span class="im">"log-conform-viscoelastic-scalar-2D.h"</span></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define logFile &quot;logAxi-scalar.dat&quot;</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-3D.h"><span class="im">"log-conform-viscoelastic-scalar-3D.h"</span></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define logFile &quot;log3D-scalar.dat&quot;</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FILTERED </span><span class="co">// Smear density and viscosity jumps</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for two-phaseVE.h"><span class="im">"two-phaseVE.h"</span></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="https://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="https://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/case-params.h.html" title="Link to local documentation for case-params.h"><span class="im">"case-params.h"</span></a><span class="pp"></span></span></code></pre></div></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h.html" title="Link to local documentation for log-conform-elastoviscoplastic-HB-scalar-2D.h"><span class="im">"log-conform-elastoviscoplastic-HB-scalar-2D.h"</span></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define logFile &quot;logAxi-EVP-HB-scalar.dat&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/log-conform-elastoviscoplastic-HB-scalar-3D.h.html" title="Link to local documentation for log-conform-elastoviscoplastic-HB-scalar-3D.h"><span class="im">"log-conform-elastoviscoplastic-HB-scalar-3D.h"</span></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define logFile &quot;log3D-EVP-HB-scalar.dat&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FILTERED </span><span class="co">// Smear density and viscosity jumps</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/two-phaseEVP-HB.h.html" title="Link to local documentation for two-phaseEVP-HB.h"><span class="im">"two-phaseEVP-HB.h"</span></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="https://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="https://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><a href="../src-local/case-params.h.html" title="Link to local documentation for case-params.h"><span class="im">"case-params.h"</span></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span><span class="pp"></span></span></code></pre></div></div>
                 <h2 id="output-cadence">Output Cadence</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define tsnap (1e-2)</span></span></code></pre></div></div>
@@ -482,25 +478,46 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define KErr (1e-6)</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define VelErr (1e-2)</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define xDist (5e-2)</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))</span></span></code></pre></div></div>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define x_dist (5e-2)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define R2(x, y, z) (sq(x - 1. - x_dist) + sq(y) + sq(z))</span></span></code></pre></div></div>
                 <h2 id="boundary-conditions">Boundary Conditions</h2>
                 <p>Left boundary uses free-slip for faster testing.</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>f<span class="op">[</span>left<span class="op">]</span> <span class="op">=</span> dirichlet<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> MAXlevel<span class="op">;</span></span></code></pre></div></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> max_level<span class="op">;</span></span></code></pre></div></div>
                 <h2 id="dimensionless-groups">Dimensionless Groups</h2>
                 <ul>
                 <li><code>We</code>: Drop Weber number</li>
                 <li><code>Ohs</code>: Solvent Ohnesorge number</li>
                 <li><code>Oha</code>: Air Ohnesorge number</li>
-                <li><code>De</code>: Deborah number</li>
+                <li><code>Ohp</code>: Polymer Ohnesorge number</li>
                 <li><code>Ec</code>: Elasto-capillary number</li>
+                <li><code>J</code>: Yield stress</li>
+                <li><code>n</code>: HB flow index</li>
                 </ul>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> We<span class="op">,</span> Ohs<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> tmax<span class="op">,</span> Ldomain<span class="op">;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> nameOut<span class="op">[</span><span class="dv">80</span><span class="op">],</span> dumpFile<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> We<span class="op">,</span> Ohs<span class="op">,</span> Oha<span class="op">,</span> ohp<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> J<span class="op">,</span> n_hb0<span class="op">,</span> tmax<span class="op">,</span> l_domain<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> name_out<span class="op">[</span><span class="dv">80</span><span class="op">],</span> dump_file<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">int</span> loadInputParams <span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span> params_file<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  paramEntry params<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;MAXlevel&quot;</span><span class="op">,</span> <span class="op">&amp;</span>max_level<span class="op">,</span> PARAM_KIND_INT<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;Ldomain&quot;</span><span class="op">,</span> <span class="op">&amp;</span>l_domain<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;L0&quot;</span><span class="op">,</span> <span class="op">&amp;</span>l_domain<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;tmax&quot;</span><span class="op">,</span> <span class="op">&amp;</span>tmax<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;We&quot;</span><span class="op">,</span> <span class="op">&amp;</span>We<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;Ohs&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ohs<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;Oha&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Oha<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;Ohp&quot;</span><span class="op">,</span> <span class="op">&amp;</span>ohp<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;Ec&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ec<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;J&quot;</span><span class="op">,</span> <span class="op">&amp;</span>J<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;n&quot;</span><span class="op">,</span> <span class="op">&amp;</span>n_hb0<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;nHB&quot;</span><span class="op">,</span> <span class="op">&amp;</span>n_hb0<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> parseCaseParams<span class="op">(</span>params_file<span class="op">,</span> params<span class="op">,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">sizeof</span><span class="op">(</span>params<span class="op">)/</span><span class="kw">sizeof</span><span class="op">(</span>params<span class="op">[</span><span class="dv">0</span><span class="op">]));</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
                 <h3 id="main">main()</h3>
                 <p>Sets domain parameters, material properties, and
                 launches the run.</p>
@@ -510,73 +527,70 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  dtmax <span class="op">=</span> <span class="fl">1e-5</span><span class="op">;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Values taken from the terminal</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  MAXlevel <span class="op">=</span> <span class="dv">8</span><span class="op">;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  Ldomain <span class="op">=</span> <span class="fl">4.0</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  max_level <span class="op">=</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  l_domain <span class="op">=</span> <span class="fl">4.0</span><span class="op">;</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  tmax <span class="op">=</span> <span class="fl">4.0</span><span class="op">;</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  We <span class="op">=</span> <span class="fl">5.0</span><span class="op">;</span></span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  Ohs <span class="op">=</span> <span class="fl">1e-2</span><span class="op">;</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  Oha <span class="op">=</span> <span class="fl">1e-2</span> <span class="op">*</span> Ohs<span class="op">;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  De <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  ohp <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  Ec <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>argc <span class="op">&gt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Usage: %s [params_file]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> argv<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>argc <span class="op">==</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    paramEntry params<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;MAXlevel&quot;</span><span class="op">,</span> <span class="op">&amp;</span>MAXlevel<span class="op">,</span> PARAM_KIND_INT<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;Ldomain&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ldomain<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;L0&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ldomain<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;tmax&quot;</span><span class="op">,</span> <span class="op">&amp;</span>tmax<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;We&quot;</span><span class="op">,</span> <span class="op">&amp;</span>We<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;Ohs&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ohs<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;Oha&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Oha<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;De&quot;</span><span class="op">,</span> <span class="op">&amp;</span>De<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">},</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>      <span class="op">{</span><span class="st">&quot;Ec&quot;</span><span class="op">,</span> <span class="op">&amp;</span>Ec<span class="op">,</span> PARAM_KIND_DOUBLE<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">}</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> oha_idx <span class="op">=</span> <span class="dv">6</span><span class="op">;</span></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>parseCaseParams<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">],</span> params<span class="op">,</span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">sizeof</span><span class="op">(</span>params<span class="op">)/</span><span class="kw">sizeof</span><span class="op">(</span>params<span class="op">[</span><span class="dv">0</span><span class="op">])))</span></span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>params<span class="op">[</span>oha_idx<span class="op">].</span>seen<span class="op">)</span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      Oha <span class="op">=</span> <span class="fl">1e-2</span> <span class="op">*</span> Ohs<span class="op">;</span></span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  L0 <span class="op">=</span> Ldomain<span class="op">;</span></span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  init_grid <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">4</span><span class="op">);</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Create a folder named intermediate where all the simulation</span></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">// snapshots are stored.</span></span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> comm<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>comm<span class="op">,</span> <span class="st">&quot;mkdir -p intermediate&quot;</span><span class="op">);</span></span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  system<span class="op">(</span>comm<span class="op">);</span></span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Name of the restart file. See writingFiles event.</span></span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>dumpFile<span class="op">,</span> <span class="st">&quot;restart&quot;</span><span class="op">);</span></span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  rho1 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> rho2 <span class="op">=</span> <span class="fl">1e-3</span><span class="op">;</span></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  mu1 <span class="op">=</span> Ohs<span class="op">/</span>sqrt<span class="op">(</span>We<span class="op">),</span> mu2 <span class="op">=</span> Oha<span class="op">/</span>sqrt<span class="op">(</span>We<span class="op">);</span></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>  G1 <span class="op">=</span> Ec<span class="op">/</span>We<span class="op">,</span> G2 <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  lambda1 <span class="op">=</span> De<span class="op">*</span>sqrt<span class="op">(</span>We<span class="op">),</span> lambda2 <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  J <span class="op">=</span> <span class="fl">1e-1</span><span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  n_hb0 <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>argc <span class="op">&gt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Usage: %s [params_file]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> argv<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>argc <span class="op">==</span> <span class="dv">2</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>loadInputParams<span class="op">(</span>argv<span class="op">[</span><span class="dv">1</span><span class="op">]))</span> <span class="op">{</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error: failed to load params from &#39;%s&#39;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>            argv<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>Ec <span class="op">==</span> <span class="fl">0.</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Ec must be non-zero for EVP-HB case.</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  De <span class="op">=</span> ohp<span class="op">/</span>Ec<span class="op">;</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  L0 <span class="op">=</span> l_domain<span class="op">;</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  init_grid <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Create a folder named intermediate where all the simulation</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  <span class="co">// snapshots are stored.</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> comm<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>comm<span class="op">,</span> <span class="st">&quot;mkdir -p intermediate&quot;</span><span class="op">);</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  system<span class="op">(</span>comm<span class="op">);</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Name of the restart file. See writingFiles event.</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>dump_file<span class="op">,</span> <span class="st">&quot;restart&quot;</span><span class="op">);</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  rho1 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> rho2 <span class="op">=</span> <span class="fl">1e-3</span><span class="op">;</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  mu1 <span class="op">=</span> Ohs<span class="op">/</span>sqrt<span class="op">(</span>We<span class="op">),</span> mu2 <span class="op">=</span> Oha<span class="op">/</span>sqrt<span class="op">(</span>We<span class="op">);</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>  G1 <span class="op">=</span> Ec<span class="op">/</span>We<span class="op">,</span> G2 <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  lambda1 <span class="op">=</span> De<span class="op">*</span>sqrt<span class="op">(</span>We<span class="op">),</span> lambda2 <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>  tau01 <span class="op">=</span> J<span class="op">,</span> tau02 <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  nHB1 <span class="op">=</span> n_hb0<span class="op">,</span> nHB2 <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  f<span class="op">.</span>sigma <span class="op">=</span> <span class="fl">1.0</span><span class="op">/</span>We<span class="op">;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  run<span class="op">();</span></span>
 <span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  f<span class="op">.</span>sigma <span class="op">=</span> <span class="fl">1.0</span><span class="op">/</span>We<span class="op">;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>  run<span class="op">();</span></span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>event init <span class="op">(</span>t <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>restore <span class="op">(</span>file <span class="op">=</span> dumpFile<span class="op">)){</span></span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>   refine<span class="op">(</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&lt;</span> <span class="op">(</span><span class="fl">1.1</span><span class="op">)</span> <span class="op">&amp;&amp;</span> R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&gt;</span> <span class="op">(</span><span class="fl">0.9</span><span class="op">)</span> <span class="op">&amp;&amp;</span> level <span class="op">&lt;</span> MAXlevel<span class="op">);</span></span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>   fraction <span class="op">(</span>f<span class="op">,</span> <span class="op">(</span><span class="dv">1</span><span class="op">-</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)));</span></span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>   foreach<span class="op">(){</span></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>    u<span class="op">.</span>x<span class="op">[]</span> <span class="op">=</span> <span class="op">-</span>f<span class="op">[]*</span><span class="fl">1.0</span><span class="op">;</span></span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[]</span> <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>f<span class="op">[];</span></span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>   <span class="op">}</span></span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>event init <span class="op">(</span>t <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>restore <span class="op">(</span>file <span class="op">=</span> dump_file<span class="op">)){</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>   refine<span class="op">(</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&lt;</span> <span class="op">(</span><span class="fl">1.1</span><span class="op">)</span> <span class="op">&amp;&amp;</span> R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&gt;</span> <span class="op">(</span><span class="fl">0.9</span><span class="op">)</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;&amp;</span> level <span class="op">&lt;</span> max_level<span class="op">);</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>   fraction <span class="op">(</span>f<span class="op">,</span> <span class="op">(</span><span class="dv">1</span><span class="op">-</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)));</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>   foreach<span class="op">(){</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>    u<span class="op">.</span>x<span class="op">[]</span> <span class="op">=</span> <span class="op">-</span>f<span class="op">[]*</span><span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    p<span class="op">[]</span> <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>f<span class="op">[];</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>   <span class="op">}</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="adaptive-mesh-refinement">Adaptive Mesh
                 Refinement</h2>
                 <p>Refines based on interface, curvature, and velocity
@@ -591,11 +605,11 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  adapt_wavelet <span class="op">((</span>scalar <span class="op">*){</span>f<span class="op">,</span> u<span class="op">.</span>x<span class="op">,</span> u<span class="op">.</span>y<span class="op">,</span> u<span class="op">.</span>z<span class="op">,</span> KAPPA<span class="op">},</span></span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">(</span><span class="dt">double</span><span class="op">[]){</span>fErr<span class="op">,</span> VelErr<span class="op">,</span> VelErr<span class="op">,</span> VelErr<span class="op">,</span> KErr<span class="op">},</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      MAXlevel<span class="op">,</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      max_level<span class="op">,</span> <span class="dv">4</span><span class="op">);</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  adapt_wavelet <span class="op">((</span>scalar <span class="op">*){</span>f<span class="op">,</span> u<span class="op">.</span>x<span class="op">,</span> u<span class="op">.</span>y<span class="op">,</span> KAPPA<span class="op">},</span></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      <span class="op">(</span><span class="dt">double</span><span class="op">[]){</span>fErr<span class="op">,</span> VelErr<span class="op">,</span> VelErr<span class="op">,</span> KErr<span class="op">},</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      MAXlevel<span class="op">,</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      max_level<span class="op">,</span> <span class="dv">4</span><span class="op">);</span></span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
@@ -604,9 +618,9 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>event writingFiles <span class="op">(</span>t <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> t <span class="op">+=</span> tsnap<span class="op">;</span> t <span class="op">&lt;=</span> tmax<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  p<span class="op">.</span>nodump <span class="op">=</span> false<span class="op">;</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  dump <span class="op">(</span>file <span class="op">=</span> dumpFile<span class="op">);</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>nameOut<span class="op">,</span> <span class="st">&quot;intermediate/snapshot-%5.4f&quot;</span><span class="op">,</span> t<span class="op">);</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  dump<span class="op">(</span>file<span class="op">=</span>nameOut<span class="op">);</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  dump <span class="op">(</span>file <span class="op">=</span> dump_file<span class="op">);</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  sprintf <span class="op">(</span>name_out<span class="op">,</span> <span class="st">&quot;intermediate/snapshot-%5.4f&quot;</span><span class="op">,</span> t<span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  dump<span class="op">(</span>file<span class="op">=</span>name_out<span class="op">);</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="ending-simulation">Ending Simulation</h2>
                 <p>Prints summary parameters at completion.</p>
@@ -615,9 +629,11 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, &quot;</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;De %2.1e, Ec %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>            MAXlevel<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot; n %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>            max_level<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> ohp<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> J<span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>            n_hb0<span class="op">);</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="log-writing">Log Writing</h2>
                 <p>Tracks kinetic energy and aborts on blow-up or
                 decay.</p>
@@ -634,51 +650,61 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> mode <span class="op">=</span> <span class="op">(</span>i <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> <span class="st">&quot;w&quot;</span> <span class="op">:</span> <span class="st">&quot;a&quot;</span><span class="op">;</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    fp <span class="op">=</span> fopen<span class="op">(</span>logFile<span class="op">,</span> mode<span class="op">);</span></span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>fp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error opening log file</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>i <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, &quot;</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;De %2.1e, Ec %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              MAXlevel<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, &quot;</span></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;De %2.1e, Ec %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>              MAXlevel<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;i dt t ke rM</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;%d %g %g %g</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;%d %g %g %g</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    fflush<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    fclose<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  assert<span class="op">(</span>ke <span class="op">&gt;</span> <span class="op">-</span><span class="fl">1e-10</span><span class="op">);</span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="fl">1e1</span> <span class="op">&amp;&amp;</span> pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span> <span class="op">||</span> ke <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>      <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> message <span class="op">=</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span><span class="op">)</span> <span class="op">?</span></span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;The kinetic energy blew up. Stopping simulation</span><span class="sc">\n</span><span class="st">&quot;</span> <span class="op">:</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;kinetic energy too small now! Stopping!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">;</span></span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>      fp <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;log&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">);</span></span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>      fflush<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>      fclose<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error opening log file &#39;%s&#39;: %s</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>              logFile<span class="op">,</span> strerror<span class="op">(</span>errno<span class="op">));</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>i <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, &quot;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,&quot;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot; n %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>              max_level<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> ohp<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> J<span class="op">,</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>              n_hb0<span class="op">);</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;Level %d, Ohs %2.1e, We %2.1e, Oha %2.1e, &quot;</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;ohp %2.1e, De %2.1e, Ec %2.1e, J %2.1e,&quot;</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot; n %2.1e</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>              max_level<span class="op">,</span> Ohs<span class="op">,</span> We<span class="op">,</span> Oha<span class="op">,</span> ohp<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> J<span class="op">,</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>              n_hb0<span class="op">);</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;i dt t ke rM</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;%d %g %g %g</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;%d %g %g %g</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    fflush<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    fclose<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  assert<span class="op">(</span>ke <span class="op">&gt;</span> <span class="op">-</span><span class="fl">1e-10</span><span class="op">);</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="fl">1e1</span> <span class="op">&amp;&amp;</span> pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span> <span class="op">||</span> ke <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>      <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> message <span class="op">=</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span><span class="op">)</span> <span class="op">?</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;The kinetic energy blew up. Stopping simulation</span><span class="sc">\n</span><span class="st">&quot;</span> <span class="op">:</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;kinetic energy too small now! Stopping!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">;</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
 <span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>      dump<span class="op">(</span>file<span class="op">=</span>dumpFile<span class="op">);</span></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>      fp <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;log&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">);</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="op">(</span>fp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>        fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error opening log file &#39;log&#39;: %s</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>                strerror<span class="op">(</span>errno<span class="op">));</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>      fflush<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>      fclose<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>      dump<span class="op">(</span>file<span class="op">=</span>dump_file<span class="op">);</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
             </div>
         </main>
 
@@ -720,7 +746,7 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
               <a href="https://bsky.app/profile/comphy-lab.org" target="_blank" rel="noopener noreferrer" aria-label="Bluesky Profile">
                 <i class="fa-brands fa-bluesky" style="font-size: 2.5em; color: white;"></i>
               </a>
-              <a href="https://github.com/comphy-lab/MultiRheoFlow/edit/main/simulationCases/dropImpact.c" class="edit-link" aria-label="Edit this page on GitHub">
+              <a href="https://github.com/comphy-lab/MultiRheoFlow/edit/main/simulationCases/dropImpact-EVP-HB.c" class="edit-link" aria-label="Edit this page on GitHub">
                 <i class="fa-brands fa-github"></i> Edit this page
               </a>
             </div>

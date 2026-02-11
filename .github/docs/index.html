@@ -483,14 +483,25 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <h2 id="test-cases">Test Cases</h2>
                 <ul>
                 <li><code>simulationCases/dropImpact.c</code></li>
+                <li><code>simulationCases/dropImpact-EVP.c</code></li>
+                <li><code>simulationCases/dropImpact-EVP-HB.c</code></li>
                 <li><code>simulationCases/dropAtomisation.c</code></li>
                 <li><code>simulationCases/pinchOff.c</code></li>
                 <li><code>simulationCases/testEigenDecomposition.c</code></li>
-                <li>Parameter files such as
-                <code>simulationCases/Bo0.0010.dat</code></li>
+                <li>Parameter files such as:
+                <ul>
+                <li><code>default-VE.params</code></li>
+                <li><code>default-EVP.params</code></li>
+                <li><code>default-EVP-HB.params</code></li>
+                <li><code>simulationCases/Bo0.0010.dat</code></li>
+                </ul></li>
                 </ul>
                 <h2 id="repository-structure">Repository Structure</h2>
                 <ul>
+                <li><code>runSimulation.sh</code>: Root-level runner
+                using <code>--case</code> and <code>--input</code>.</li>
+                <li><code>default-*.params</code>: Root-level default
+                parameter files for drop-impact variants.</li>
                 <li><code>src-local/</code>: Project-specific Basilisk
                 headers and helpers.</li>
                 <li><code>simulationCases/</code>: Simulation entry
@@ -528,28 +539,78 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> simulationCases</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> dropImpact.tst</span></code></pre></div></div>
-                <h3 id="run-via-helper-scripts">Run via Helper
-                Scripts</h3>
+                <h3 id="run-via-root-runner">Run via Root Runner</h3>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> simulationCases</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runCases.sh dropImpact</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> cleanup.sh dropImpact</span></code></pre></div></div>
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh <span class="at">--case</span> simulationCases/dropImpact.c</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh <span class="at">--case</span> simulationCases/dropImpact-EVP.c</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh <span class="at">--case</span> simulationCases/dropImpact-EVP-HB.c</span></code></pre></div></div>
+                <p>Defaults:</p>
+                <ul>
+                <li><code>--case</code> -&gt;
+                <code>simulationCases/dropImpact.c</code></li>
+                <li><code>--input</code> -&gt;
+                <code>default-VE.params</code></li>
+                </ul>
+                <p>When a different case is provided and
+                <code>--input</code> is omitted,
+                <code>runSimulation.sh</code> uses case-specific
+                defaults:</p>
+                <ul>
+                <li><code>dropImpact</code> -&gt;
+                <code>default-VE.params</code></li>
+                <li><code>dropImpact-EVP</code> -&gt;
+                <code>default-EVP.params</code></li>
+                <li><code>dropImpact-EVP-HB</code> -&gt;
+                <code>default-EVP-HB.params</code></li>
+                </ul>
+                <p>Parameter keys:</p>
+                <ul>
+                <li>VE and EVP: <code>MAXlevel</code>,
+                <code>Ldomain</code> (or <code>L0</code>),
+                <code>tmax</code>, <code>We</code>, <code>Ohs</code>,
+                <code>Oha</code>, <code>De</code>, <code>Ec</code></li>
+                <li>EVP-HB: <code>MAXlevel</code>, <code>Ldomain</code>
+                (or <code>L0</code>), <code>tmax</code>,
+                <code>We</code>, <code>Ohs</code>, <code>Oha</code>,
+                <code>Ohp</code>, <code>Ec</code>, <code>J</code>,
+                <code>n</code> (or <code>nHB</code>)
+                <ul>
+                <li><code>De</code> is computed internally as
+                <code>De = Ohp/Ec</code></li>
+                </ul></li>
+                </ul>
+                <p>You can also override defaults by passing a parameter
+                file:</p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh <span class="at">--case</span> simulationCases/dropImpact-EVP-HB.c <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> default-EVP-HB.params</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runSimulation.sh <span class="at">--case</span> simulationCases/dropImpact-EVP-HB.c <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> my-custom.params</span></code></pre></div></div>
+                <h3 id="legacy-wrapper">Legacy Wrapper</h3>
+                <p><code>simulationCases/runCases.sh</code> remains
+                available as a compatibility wrapper around
+                <code>runSimulation.sh</code>:</p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> simulationCases</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> runCases.sh dropImpact-EVP-HB default-EVP-HB.params</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> cleanup.sh dropImpact-EVP-HB</span></code></pre></div></div>
                 <h3 id="compile-and-run-from-cli">Compile and Run from
                 CLI</h3>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-disable-dimensions</span> <span class="at">-I</span><span class="va">$PWD</span>/src-local <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  simulationCases/dropImpact.c <span class="at">-o</span> dropImpact <span class="at">-lm</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./dropImpact</span></span></code></pre></div></div>
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-disable-dimensions</span> <span class="at">-I</span><span class="va">$PWD</span>/src-local <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  simulationCases/dropImpact.c <span class="at">-o</span> dropImpact <span class="at">-lm</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./dropImpact</span></span></code></pre></div></div>
                 <h3 id="compile-and-run-with-mpi-macos">Compile and Run
                 with MPI (macOS)</h3>
                 <blockquote>
                 <p>Note: you should have OpenMPI installed.</p>
                 </blockquote>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">CC99</span><span class="op">=</span><span class="st">&#39;mpicc -std=c99 -D_GNU_SOURCE=1&#39;</span> <span class="ex">qcc</span> <span class="at">-Wall</span> <span class="at">-O2</span> <span class="at">-D_MPI</span><span class="op">=</span>1 <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-disable-dimensions</span> <span class="at">-I</span><span class="va">$PWD</span>/src-local simulationCases/dropImpact.c <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> dropImpact <span class="at">-lm</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> <span class="va">$NUM_PROCESSORS_TO_USE</span> ./dropImpact</span></code></pre></div></div>
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">CC99</span><span class="op">=</span><span class="st">&#39;mpicc -std=c99 -D_GNU_SOURCE=1&#39;</span> <span class="ex">qcc</span> <span class="at">-Wall</span> <span class="at">-O2</span> <span class="at">-D_MPI</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-disable-dimensions</span> <span class="at">-I</span><span class="va">$PWD</span>/src-local simulationCases/dropImpact.c <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> dropImpact <span class="at">-lm</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> <span class="va">$NUM_PROCESSORS_TO_USE</span> ./dropImpact</span></code></pre></div></div>
                 <h2 id="post-processing">Post-Processing</h2>
                 <ul>
                 <li><code>postProcess/VideoAxi.py</code></li>
@@ -559,10 +620,10 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <h2 id="documentation">Documentation</h2>
                 <p>Generate the documentation locally:</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.github/scripts/build.sh</span></span></code></pre></div></div>
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.github/scripts/build.sh</span></span></code></pre></div></div>
                 <p>Preview locally:</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.github/scripts/deploy.sh</span></span></code></pre></div></div>
+                class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.github/scripts/deploy.sh</span></span></code></pre></div></div>
                 <h2 id="contributing">Contributing</h2>
                 <p>Contributions to MultiRheoFlow are welcome! Please
                 see our <a href="Contributing.md.html">Contributing</a> guide
@@ -577,6 +638,17 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 C framework.</p>
                 <h2 id="generated-documentation">Generated
                 Documentation</h2>
+                <h3 id="root-directory">Root Directory</h3>
+                <ul>
+                <li><a
+                href="default-EVP-HB.params.html">default-EVP-HB.params</a></li>
+                <li><a
+                href="default-EVP.params.html">default-EVP.params</a></li>
+                <li><a
+                href="default-VE.params.html">default-VE.params</a></li>
+                <li><a
+                href="runSimulation.sh.html">runSimulation.sh</a></li>
+                </ul>
                 <h3 id="postprocess">postProcess</h3>
                 <ul>
                 <li><a
@@ -593,6 +665,10 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <li><a
                 href="simulationCases/dropAtomisation.c.html">simulationCases/dropAtomisation.c</a></li>
                 <li><a
+                href="simulationCases/dropImpact-EVP-HB.c.html">simulationCases/dropImpact-EVP-HB.c</a></li>
+                <li><a
+                href="simulationCases/dropImpact-EVP.c.html">simulationCases/dropImpact-EVP.c</a></li>
+                <li><a
                 href="simulationCases/dropImpact.c.html">simulationCases/dropImpact.c</a></li>
                 <li><a
                 href="simulationCases/pinchOff.c.html">simulationCases/pinchOff.c</a></li>
@@ -604,7 +680,13 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <h3 id="src-local">src-local</h3>
                 <ul>
                 <li><a
+                href="src-local/case-params.h.html">src-local/case-params.h</a></li>
+                <li><a
                 href="src-local/eigen_decomposition.h.html">src-local/eigen_decomposition.h</a></li>
+                <li><a
+                href="src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h.html">src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h</a></li>
+                <li><a
+                href="src-local/log-conform-elastoviscoplastic-HB-scalar-3D.h.html">src-local/log-conform-elastoviscoplastic-HB-scalar-3D.h</a></li>
                 <li><a
                 href="src-local/log-conform-elastoviscoplastic-scalar-2D.h.html">src-local/log-conform-elastoviscoplastic-scalar-2D.h</a></li>
                 <li><a
@@ -617,6 +699,8 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 href="src-local/log-conform-viscoelastic-scalar-3D.h.html">src-local/log-conform-viscoelastic-scalar-3D.h</a></li>
                 <li><a
                 href="src-local/log-conform-viscoelastic.h.html">src-local/log-conform-viscoelastic.h</a></li>
+                <li><a
+                href="src-local/two-phaseEVP-HB.h.html">src-local/two-phaseEVP-HB.h</a></li>
                 <li><a
                 href="src-local/two-phaseEVP.h.html">src-local/two-phaseEVP.h</a></li>
                 <li><a

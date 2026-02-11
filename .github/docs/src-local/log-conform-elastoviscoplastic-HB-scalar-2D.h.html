@@ -171,7 +171,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>src-local/log-conform-elastoviscoplastic-scalar-2D.h | MultiRheoFlow</title>
+  <title>src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h | MultiRheoFlow</title>
 
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -202,7 +202,7 @@
   </style>
 
   <!-- Critical Meta Tags -->
-  <meta name="description" content="Scalar log-conformation implementation for 2D and axisymmetric elasto-viscoplastic flows.">
+  <meta name="description" content="Scalar log-conformation implementation for 2D and axisymmetric elasto-viscoplastic Herschel-Bulkley flows.">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="bcg.h, conform, elastoviscoplastic, scalar, struct">
@@ -424,27 +424,28 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 
             <div class="page-content">
 
-                                <h1 class="page-title">src-local/log-conform-elastoviscoplastic-scalar-2D.h</h1>
+                                <h1 class="page-title">src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h</h1>
 
 
                                 <div class="raw-file-button-container">
-                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/src-local/log-conform-elastoviscoplastic-scalar-2D.h" class="raw-file-button" target="_blank" rel="noopener noreferrer">
+                    <a href="https://github.com/comphy-lab/MultiRheoFlow/raw/main/src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h" class="raw-file-button" target="_blank" rel="noopener noreferrer">
                         <i class="fa-brands fa-github"></i> See raw file
                     </a>
                 </div>
 
                 <h1
-                id="log-conformation-scalar-2daxi-evp">Log-Conformation
-                (Scalar 2D/Axi EVP)</h1>
+                id="log-conformation-scalar-2daxi-evp-hb">Log-Conformation
+                (Scalar 2D/Axi EVP-HB)</h1>
                 <p>Scalar log-conformation implementation for 2D and
-                axisymmetric elasto-viscoplastic flows.</p>
+                axisymmetric elasto-viscoplastic Herschel-Bulkley
+                flows.</p>
                 <h2 id="key-features">Key Features</h2>
                 <ul>
                 <li>Conformation tensor components stored as
                 scalars.</li>
                 <li>Supports 2D and axisymmetric configurations.</li>
                 <li>Mirrors
-                <code>log-conform-elastoviscoplastic-scalar-3D.h</code>.</li>
+                <code>log-conform-elastoviscoplastic-HB-scalar-3D.h</code>.</li>
                 </ul>
                 <h2 id="change-log">Change Log</h2>
                 <ul>
@@ -455,6 +456,8 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 <li>2024-11-23: Documentation updates.</li>
                 <li>2026-02-02: Unify MultiRheoFlow docs across all
                 submodules.</li>
+                <li>2026-02-09: Add HB variant with <code>nHB</code> and
+                HB relaxation factor.</li>
                 </ul>
                 <h2 id="future-work">Future Work</h2>
                 <ul>
@@ -467,8 +470,8 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 vatsal.sanjay@comphy-lab.org Last updated:
                 2025-06-30</p>
                 <h1
-                id="the-log-conformation-method-for-viscoelastic-constitutive-models">The
-                log-conformation method for viscoelastic constitutive
+                id="the-log-conformation-method-for-evp-hb-constitutive-models">The
+                log-conformation method for EVP-HB constitutive
                 models</h1>
                 <h2 id="introduction">Introduction</h2>
                 <p>Elasto-viscoplastic fluids exhibit viscous, elastic
@@ -520,42 +523,57 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
                 the relaxation function. Here, <span
                 class="math inline">\(\lambda\)</span> is the relaxation
                 time.</p>
-                <p>In the case of Saramito (2007) elasto-viscoplastic
-                model, where the material before yielding is represented
-                by Kelvin-Voigt viscoelastic solid and long after
-                yielding recovers the Oldroyd-B type viscoelastic fluid
-                behaviour, <span class="math inline">\(\mathbf{f}_s
-                (\mathbf{A}) = \mathbf{A} -\mathbf{I}\)</span>, <span
+                <p>In the case of elasto-viscoplastic Herschel-Bulkley
+                (HB) model, where the material before yielding is
+                represented by Kelvin-Voigt viscoelastic solid and long
+                after yielding recovers the Oldroyd-B type viscoelastic
+                fluid behaviour, <span
+                class="math inline">\(\mathbf{f}_s (\mathbf{A}) =
+                \mathbf{A} -\mathbf{I}\)</span>, <span
                 class="math inline">\(\mathbf{f}_r (\mathbf{A}) =
-                \mathcal{F}(\mathbf{A} -\mathbf{I})\)</span>, and the
-                above equations can be combined to avoid the use of
-                <span class="math inline">\(\mathbf{A}\)</span> <span
+                K_{HB}(\mathbf{A} -\mathbf{I})\)</span>, and the above
+                equations can be combined to avoid the use of <span
+                class="math inline">\(\mathbf{A}\)</span> <span
                 class="math display">\[
-                (\mathcal{F}/\lambda) \mathbf{T} + (D_t \mathbf{T} -
+                (K_{HB}/\lambda) \mathbf{T} + (D_t \mathbf{T} -
                 \mathbf{T} \cdot \nabla \mathbf{u} -
                 \nabla \mathbf{u}^{T} \cdot \mathbf{T})  = 2 G_p\lambda
                 \mathbf{D}
                 \]</span></p>
-                <p>Here, <span class="math inline">\(\mathcal{F} =
-                max(0., \frac{\|\tau_d\|-\tau_y}{\|\tau_d\|}\)</span>.
-                <a href="#comminal2015">Comminal et al. (2015)</a>
-                gathered the functions <span
-                class="math inline">\(\mathbf{f}_s (\mathbf{A})\)</span>
-                and <span class="math inline">\(\mathbf{f}_r
-                (\mathbf{A})\)</span> for different viscoelastic
-                constitutive models. This work is an extension of such
-                formulation for elasto-viscoplastic materials.</p>
+                <p>Here, <span class="math display">\[
+                K_{HB} = max\left[0,
+                \left(\frac{\|\tau_d\|-\tau_y}
+                {(G_p\lambda)^{1-n_{HB}}
+                \|\tau_d\|}\right)^{1/n_{HB}}\right]
+                \]</span> where <span
+                class="math inline">\(n_{HB}=1\)</span> recovers the
+                Saramito yield factor. The stress closure is <span
+                class="math display">\[
+                \mathbf{\tau}_p =
+                \frac{Oh_p}{De}(\mathbf{A}-\mathbf{I}),
+                \quad Oh_p = G_p\lambda
+                \]</span> which is implemented as <span
+                class="math inline">\(\mathbf{T} =
+                G_p(\mathbf{A}-\mathbf{I})\)</span>. <a
+                href="#comminal2015">Comminal et al. (2015)</a> gathered
+                the functions <span class="math inline">\(\mathbf{f}_s
+                (\mathbf{A})\)</span> and <span
+                class="math inline">\(\mathbf{f}_r (\mathbf{A})\)</span>
+                for different viscoelastic constitutive models. This
+                work is an extension of such formulation for
+                elasto-viscoplastic materials.</p>
                 <h2 id="parameters">Parameters</h2>
                 <p>The primary parameters are the relaxation time <span
                 class="math inline">\(\lambda\)</span>, elastic modulus
-                <span class="math inline">\(G_p\)</span> and yield
-                stress <span class="math inline">\(\tau_y\)</span>. The
-                solvent viscosity <span
+                <span class="math inline">\(G_p\)</span>, yield stress
+                <span class="math inline">\(\tau_y\)</span> and HB
+                exponent <span class="math inline">\(n_{HB}\)</span>.
+                The solvent viscosity <span
                 class="math inline">\(\mu_s\)</span> is defined in the
                 <a href="navier-stokes/centered.h">Navier-Stokes
                 solver</a>.</p>
-                <p>Gp, lambda and tau_y are defined in <a
-                href="two-phaseEVP.h">two-phaseEVP.h</a>.</p>
+                <p>Gp, lambda, tau_y and nHB are defined in <a
+                href="two-phaseEVP-HB.h">two-phaseEVP-HB.h</a>.</p>
                 <h2 id="the-log-conformation-approach">The log
                 conformation approach</h2>
                 <p>The numerical resolution of viscoelastic and EVP
@@ -637,60 +655,58 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">const</span><span class="op">)</span> scalar Gp <span class="op">=</span> unity<span class="op">;</span> <span class="co">// elastic modulus</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">const</span><span class="op">)</span> scalar lambda <span class="op">=</span> unity<span class="op">;</span> <span class="co">// relaxation time</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">const</span><span class="op">)</span> scalar tau0 <span class="op">=</span> unity<span class="op">;</span> <span class="co">// yield-stress</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> saramito_yield_eps <span class="op">=</span> <span class="fl">1e-6</span><span class="op">;</span> <span class="co">// regularization for yield factor denominator</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>scalar A11<span class="op">[],</span> A12<span class="op">[],</span> A22<span class="op">[];</span> <span class="co">// conformation tensor</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>scalar T11<span class="op">[],</span> T12<span class="op">[],</span> T22<span class="op">[];</span> <span class="co">// stress tensor</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>scalar AThTh<span class="op">[],</span> T_ThTh<span class="op">[];</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>event defaults <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>saramito_yield_eps <span class="op">&lt;</span> <span class="fl">1e-16</span><span class="op">)</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    saramito_yield_eps <span class="op">=</span> <span class="fl">1e-16</span><span class="op">;</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_constant <span class="op">(</span>a<span class="op">.</span>x<span class="op">))</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> new face vector<span class="op">;</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">/*</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">  initialize A and T</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">  */</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>A11<span class="op">,</span> A22<span class="op">})</span> <span class="op">{</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    foreach <span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>      s<span class="op">[]</span> <span class="op">=</span> <span class="fl">1.</span><span class="op">;</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>T11<span class="op">,</span> T12<span class="op">,</span> T22<span class="op">,</span> A12<span class="op">})</span> <span class="op">{</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    foreach<span class="op">(){</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>      s<span class="op">[]</span> <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  foreach<span class="op">(){</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    T_ThTh<span class="op">[]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    AThTh<span class="op">[]</span> <span class="op">=</span> <span class="fl">1.</span><span class="op">;</span></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>T11<span class="op">,</span> T12<span class="op">,</span> T22<span class="op">})</span> <span class="op">{</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s<span class="op">.</span>boundary<span class="op">[</span>left<span class="op">]</span> <span class="op">!=</span> periodic_bc<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>        s<span class="op">[</span>left<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>          s<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>A11<span class="op">,</span> A12<span class="op">,</span> A22<span class="op">})</span> <span class="op">{</span></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s<span class="op">.</span>boundary<span class="op">[</span>left<span class="op">]</span> <span class="op">!=</span> periodic_bc<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>        s<span class="op">[</span>left<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>          s<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>  T12<span class="op">[</span>bottom<span class="op">]</span> <span class="op">=</span> dirichlet <span class="op">(</span><span class="fl">0.</span><span class="op">);</span></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  A12<span class="op">[</span>bottom<span class="op">]</span> <span class="op">=</span> dirichlet <span class="op">(</span><span class="fl">0.</span><span class="op">);</span></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">(</span><span class="dt">const</span><span class="op">)</span> scalar nHB <span class="op">=</span> unity<span class="op">;</span> <span class="co">// HB power-law exponent</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> saramitoHB_yield_eps <span class="op">=</span> <span class="fl">1e-6</span><span class="op">;</span> <span class="co">// regularization for HB denominator</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>scalar A11<span class="op">[],</span> A12<span class="op">[],</span> A22<span class="op">[];</span> <span class="co">// conformation tensor</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>scalar T11<span class="op">[],</span> T12<span class="op">[],</span> T22<span class="op">[];</span> <span class="co">// stress tensor</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>scalar AThTh<span class="op">[],</span> T_ThTh<span class="op">[];</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>event defaults <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_constant <span class="op">(</span>a<span class="op">.</span>x<span class="op">))</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> new face vector<span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">/*</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">  initialize A and T</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">  */</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>A11<span class="op">,</span> A22<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    foreach <span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      s<span class="op">[]</span> <span class="op">=</span> <span class="fl">1.</span><span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>T11<span class="op">,</span> T12<span class="op">,</span> T22<span class="op">,</span> A12<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    foreach<span class="op">(){</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>      s<span class="op">[]</span> <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  foreach<span class="op">(){</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    T_ThTh<span class="op">[]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    AThTh<span class="op">[]</span> <span class="op">=</span> <span class="fl">1.</span><span class="op">;</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>T11<span class="op">,</span> T12<span class="op">,</span> T22<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s<span class="op">.</span>boundary<span class="op">[</span>left<span class="op">]</span> <span class="op">!=</span> periodic_bc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        s<span class="op">[</span>left<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>          s<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>scalar s in <span class="op">{</span>A11<span class="op">,</span> A12<span class="op">,</span> A22<span class="op">})</span> <span class="op">{</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>s<span class="op">.</span>boundary<span class="op">[</span>left<span class="op">]</span> <span class="op">!=</span> periodic_bc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>        s<span class="op">[</span>left<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>          s<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  T12<span class="op">[</span>bottom<span class="op">]</span> <span class="op">=</span> dirichlet <span class="op">(</span><span class="fl">0.</span><span class="op">);</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>  A12<span class="op">[</span>bottom<span class="op">]</span> <span class="op">=</span> dirichlet <span class="op">(</span><span class="fl">0.</span><span class="op">);</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="useful-functions-in-2d">Useful functions in
                 2D</h2>
                 <p>The first step is to implement a routine to calculate
@@ -988,17 +1004,21 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#else</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> tauD <span class="op">=</span> sqrt<span class="op">(</span><span class="fl">0.25</span><span class="op">*(</span>T11<span class="op">[]</span> <span class="op">-</span> T22<span class="op">[])*(</span>T11<span class="op">[]</span> <span class="op">-</span> T22<span class="op">[])</span> <span class="op">+</span> T12<span class="op">[]*</span>T12<span class="op">[]);</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> yieldFactor <span class="op">=</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>      max<span class="op">(</span><span class="fl">0.</span><span class="op">,</span> <span class="op">(</span>tauD <span class="op">-</span> tau0<span class="op">[])/(</span>tauD <span class="op">+</span> saramito_yield_eps<span class="op">));</span> <span class="co">// $\mathcal{F}$</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> intFactor <span class="op">=</span> <span class="op">(</span>lambda<span class="op">[]</span> <span class="op">!=</span> <span class="fl">0.</span> <span class="op">?</span> <span class="op">(</span>lambda<span class="op">[]</span> <span class="op">==</span> <span class="fl">1e30</span> <span class="op">?</span> <span class="dv">1</span><span class="op">:</span> exp<span class="op">(-</span>dt<span class="op">*</span>yieldFactor<span class="op">/</span>lambda<span class="op">[])):</span> <span class="fl">0.</span><span class="op">);</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>      Aqq <span class="op">=</span> <span class="op">(</span><span class="fl">1.</span> <span class="op">-</span> intFactor<span class="op">)</span> <span class="op">+</span> intFactor<span class="op">*</span>exp<span class="op">(</span>Psiqq<span class="op">[]);</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> nHB_loc <span class="op">=</span> max<span class="op">(</span>nHB<span class="op">[],</span> <span class="fl">1e-12</span><span class="op">);</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> ohp <span class="op">=</span> max<span class="op">(</span>fabs<span class="op">(</span>Gp<span class="op">[]*</span>lambda<span class="op">[]),</span> saramitoHB_yield_eps<span class="op">);</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> hbArgument <span class="op">=</span> <span class="op">(</span>tauD <span class="op">-</span> tau0<span class="op">[])/</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">(</span>pow<span class="op">(</span>ohp<span class="op">,</span> <span class="fl">1.</span> <span class="op">-</span> nHB_loc<span class="op">)*(</span>tauD <span class="op">+</span> saramitoHB_yield_eps<span class="op">));</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> KHB <span class="op">=</span> max<span class="op">(</span><span class="fl">0.</span><span class="op">,</span> pow<span class="op">(</span>max<span class="op">(</span>hbArgument<span class="op">,</span> <span class="fl">0.</span><span class="op">),</span> <span class="fl">1.</span><span class="op">/</span>nHB_loc<span class="op">));</span> <span class="co">// $K_{HB}$</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> intFactor <span class="op">=</span> <span class="op">(</span>lambda<span class="op">[]</span> <span class="op">!=</span> <span class="fl">0.</span> <span class="op">?</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>      <span class="op">(</span>lambda<span class="op">[]</span> <span class="op">==</span> <span class="fl">1e30</span> <span class="op">?</span> <span class="dv">1</span><span class="op">:</span> exp<span class="op">(-</span>dt<span class="op">*</span>KHB<span class="op">/</span>lambda<span class="op">[])):</span> <span class="fl">0.</span><span class="op">);</span></span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    A<span class="op">.</span>x<span class="op">.</span>y <span class="op">*=</span> intFactor<span class="op">;</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    foreach_dimension<span class="op">()</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>      A<span class="op">.</span>x<span class="op">.</span>x <span class="op">=</span> <span class="op">(</span><span class="fl">1.</span> <span class="op">-</span> intFactor<span class="op">)</span> <span class="op">+</span> A<span class="op">.</span>x<span class="op">.</span>x<span class="op">*</span>intFactor<span class="op">;</span></span></code></pre></div></div>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#if AXI</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>      Aqq <span class="op">=</span> <span class="op">(</span><span class="fl">1.</span> <span class="op">-</span> intFactor<span class="op">)</span> <span class="op">+</span> intFactor<span class="op">*</span>exp<span class="op">(</span>Psiqq<span class="op">[]);</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    A<span class="op">.</span>x<span class="op">.</span>y <span class="op">*=</span> intFactor<span class="op">;</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    foreach_dimension<span class="op">()</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>      A<span class="op">.</span>x<span class="op">.</span>x <span class="op">=</span> <span class="op">(</span><span class="fl">1.</span> <span class="op">-</span> intFactor<span class="op">)</span> <span class="op">+</span> A<span class="op">.</span>x<span class="op">.</span>x<span class="op">*</span>intFactor<span class="op">;</span></span></code></pre></div></div>
                 <p>Then the Conformation tensor <span
                 class="math inline">\(\mathcal{A}_p^{n+1}\)</span> is
                 restored from <span
@@ -1113,7 +1133,7 @@ window.baseDomain = "https://comphy-lab.org/MultiRheoFlow";
               <a href="https://bsky.app/profile/comphy-lab.org" target="_blank" rel="noopener noreferrer" aria-label="Bluesky Profile">
                 <i class="fa-brands fa-bluesky" style="font-size: 2.5em; color: white;"></i>
               </a>
-              <a href="https://github.com/comphy-lab/MultiRheoFlow/edit/main/src-local/log-conform-elastoviscoplastic-scalar-2D.h" class="edit-link" aria-label="Edit this page on GitHub">
+              <a href="https://github.com/comphy-lab/MultiRheoFlow/edit/main/src-local/log-conform-elastoviscoplastic-HB-scalar-2D.h" class="edit-link" aria-label="Edit this page on GitHub">
                 <i class="fa-brands fa-github"></i> Edit this page
               </a>
             </div>
