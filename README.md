@@ -13,7 +13,7 @@ high-fidelity simulations of non-Newtonian fluids and viscoelastic materials
 with free surfaces, interfaces, and capillary effects.
 
 Developed at the
-[Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the
+[Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at
 Durham University, MultiRheoFlow provides a modular platform where
 different rheological constitutive equations can be integrated with multiphase
 flow scenarios.
