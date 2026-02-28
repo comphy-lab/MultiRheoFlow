@@ -13,8 +13,8 @@ high-fidelity simulations of non-Newtonian fluids and viscoelastic materials
 with free surfaces, interfaces, and capillary effects.
 
 Developed at the
-[Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at the
-University of Twente, MultiRheoFlow provides a modular platform where
+[Computational Multiphase Physics (CoMPhy) Lab](https://comphy-lab.org/) at
+Durham University, MultiRheoFlow provides a modular platform where
 different rheological constitutive equations can be integrated with multiphase
 flow scenarios.
 
@@ -26,7 +26,7 @@ flow scenarios.
   - Viscoelastic fluids (Oldroyd-B - done ✅, Giesekus - good to have 🍀,
     FENE-P - urgent 📌)
   - Yield-stress materials (Bingham - done ✅, Herschel-Bulkley - done ✅)
-  - Elastoviscoplastic materials (Saramito model - good to have 🍀)
+  - Elastoviscoplastic materials (Saramito model - done ✅)
 - **Multiphase Capabilities**: Handles interfacial dynamics with:
   - Two-phase and multiphase flow support
   - Accurate surface tension and capillary effects
@@ -63,20 +63,18 @@ flow scenarios.
 - `postProcess/`: Post-processing and visualization tools.
 - `.github/`: Documentation and CI tooling (generated docs go to
   `.github/docs/`).
-- Root scripts such as `reset_install_requirements.sh`.
 
 ## Running the Code
 
 ### Install Basilisk
 
 - Follow the instructions [here](http://basilisk.fr/src/INSTALL).
-- For macOS and Linux, you can use `reset_install_requirements.sh`.
 - For Windows, we recommend using WSL; please report any issues you find.
 
 ```bash
 # Prerequisites: Basilisk installation (http://basilisk.fr)
-git clone https://github.com/comphy-lab/RheoMultiFlow.git
-cd RheoMultiFlow
+git clone https://github.com/comphy-lab/MultiRheoFlow.git
+cd MultiRheoFlow
 curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-01-29 --hard
 ```
 
