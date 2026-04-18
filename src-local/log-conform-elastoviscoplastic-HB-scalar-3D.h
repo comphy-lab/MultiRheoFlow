@@ -247,16 +247,16 @@ event defaults (i = 0) {
   for (scalar s in {A11, A22, A33, T11, T22, T33, A12, A13, A23, T12, T13, T23}) {
     if (s.boundary[left] != periodic_bc) {
       s[left] = neumann(0);
-	    s[right] = neumann(0);
+      s[right] = neumann(0);
     }
     if (s.boundary[top] != periodic_bc) {
       s[top] = neumann(0);
-	    s[bottom] = neumann(0);
+      s[bottom] = neumann(0);
     }
 #if dimension == 3
     if (s.boundary[front] != periodic_bc) {
       s[front] = neumann(0);
-	    s[back] = neumann(0);
+      s[back] = neumann(0);
     }
 #endif
   }

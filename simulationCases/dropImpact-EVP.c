@@ -30,6 +30,9 @@ Date: Feb 09, 2026
 #include "tension.h"
 #include "case-params.h"
 
+#include <errno.h>
+#include <string.h>
+
 /**
 ## Output Cadence
 */
@@ -216,7 +219,8 @@ event logWriting (i++) {
     const char* mode = (i == 0) ? "w" : "a";
     fp = fopen(logFile, mode);
     if (fp == NULL) {
-      fprintf(ferr, "Error opening log file\n");
+      fprintf(ferr, "Error opening log file '%s': %s\n",
+              logFile, strerror(errno));
       return 1;
     }
 
@@ -251,6 +255,11 @@ event logWriting (i++) {
       fprintf(ferr, "%s", message);
 
       fp = fopen("log", "a");
+      if (fp == NULL) {
+        fprintf(ferr, "Error opening log file 'log': %s\n",
+                strerror(errno));
+        return 1;
+      }
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
