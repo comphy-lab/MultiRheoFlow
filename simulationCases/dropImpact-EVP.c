@@ -254,6 +254,8 @@ event logWriting (i++) {
 
       fprintf(ferr, "%s", message);
 
+      dump(file=dump_file);
+
       fp = fopen("log", "a");
       if (fp == NULL) {
         fprintf(ferr, "Error opening log file 'log': %s\n",
@@ -264,7 +266,6 @@ event logWriting (i++) {
       fflush(fp);
       fclose(fp);
 
-      dump(file=dump_file);
       return 1;
     }
   }
