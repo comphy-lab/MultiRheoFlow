@@ -167,29 +167,32 @@ Checks `A * v = lambda * v` for each eigenpair.
 int verify_eigenpairs(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d* Lambda) {
     printf("Verifying A * v = λ * v for each eigenpair:\n");
     for (int i = 0; i < 3; i++) {
-        pseudo_v3d Av = {0}, lambda_v = {0};
-        
-        // Compute A * v
-        for (int j = 0; j < 3; j++) {
-            ((double*)&Av)[j] = ((double*)A)[j*3] * ((double*)R)[i] + 
-                                ((double*)A)[j*3+1] * ((double*)R)[i+3] + 
-                                ((double*)A)[j*3+2] * ((double*)R)[i+6];
+        /* Columns of R are the eigenvectors. */
+        long double vx, vy, vz, lam;
+        if (i == 0) {
+            vx = R->x.x; vy = R->y.x; vz = R->z.x; lam = Lambda->x;
+        } else if (i == 1) {
+            vx = R->x.y; vy = R->y.y; vz = R->z.y; lam = Lambda->y;
+        } else {
+            vx = R->x.z; vy = R->y.z; vz = R->z.z; lam = Lambda->z;
         }
-        
-        // Compute λ * v
-        for (int j = 0; j < 3; j++) {
-            ((double*)&lambda_v)[j] = ((double*)Lambda)[i] * ((double*)R)[i+j*3];
-        }
-        
+
+        pseudo_v3d a_v, lambda_v;
+        a_v.x = A->x.x * vx + A->x.y * vy + A->x.z * vz;
+        a_v.y = A->y.x * vx + A->y.y * vy + A->y.z * vz;
+        a_v.z = A->z.x * vx + A->z.y * vy + A->z.z * vz;
+        lambda_v.x = lam * vx;
+        lambda_v.y = lam * vy;
+        lambda_v.z = lam * vz;
+
         printf("Eigenpair %d:\n", i + 1);
-        printf("A * v = %8.4Lf %8.4Lf %8.4Lf\n", Av.x, Av.y, Av.z);
+        printf("A * v = %8.4Lf %8.4Lf %8.4Lf\n", a_v.x, a_v.y, a_v.z);
         printf("λ * v = %8.4Lf %8.4Lf %8.4Lf\n", lambda_v.x, lambda_v.y, lambda_v.z);
-        
-        // Check if A * v ≈ λ * v
-        for (int j = 0; j < 3; j++) {
-            if (fabs(((double*)&Av)[j] - ((double*)&lambda_v)[j]) > EPSILON) {
-                printf("Mismatch for eigenpair %d, component %d\n", i + 1, j + 1);
-            }
+
+        if (fabsl(a_v.x - lambda_v.x) > EPSILON ||
+            fabsl(a_v.y - lambda_v.y) > EPSILON ||
+            fabsl(a_v.z - lambda_v.z) > EPSILON) {
+            printf("Mismatch for eigenpair %d\n", i + 1);
         }
         printf("Verification A * v = λ * v for each eigenpair done. See the messages above!\n\n");
     }

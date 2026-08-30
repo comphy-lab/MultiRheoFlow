@@ -75,10 +75,10 @@ flow scenarios.
 # Prerequisites: Basilisk installation (http://basilisk.fr)
 git clone https://github.com/comphy-lab/MultiRheoFlow.git
 cd MultiRheoFlow
-curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-01-29 --hard
+curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/v2026-08-30/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-08-30 --hard
 ```
 
-Update `v2026-01-29` with the latest version.
+Update `v2026-08-30` with the latest [basilisk-C release](https://github.com/comphy-lab/basilisk-C/releases). The `basilisk/` tree is gitignored.
 
 ### Compile a Case with Make
 

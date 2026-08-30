@@ -7,10 +7,10 @@
 4. Installing Basilisk C:
 
 ```
-curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-01-13 --hard
+curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/v2026-08-30/reset_install_basilisk-ref-locked.sh | bash -s -- --ref=v2026-08-30 --hard
 ```
 
-Replace `v2026-01-13` with the latest version from [Basilisk C](https://github.com/comphy-lab/basilisk-C).
+Update `v2026-08-30` with the latest [basilisk-C release](https://github.com/comphy-lab/basilisk-C/releases).
 
 ## Project Structure
 - `runSimulation.sh`: Root-level runner with `--case` and `--input`

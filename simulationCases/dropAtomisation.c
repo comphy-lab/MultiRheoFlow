@@ -85,8 +85,6 @@ char nameOut[80], dumpFile[80];
 Sets domain parameters, material properties, and launches the run.
 */
 int  main(int argc, char const *argv[]) {
-  // dtmax = 1e-5; //  BEWARE of this for stability issues.
-
   L0 = 20;
   init_grid (1 << 6);
 
