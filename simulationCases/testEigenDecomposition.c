@@ -177,21 +177,21 @@ int verify_eigenpairs(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo_v3d
             vx = R->x.z; vy = R->y.z; vz = R->z.z; lam = Lambda->z;
         }
 
-        pseudo_v3d Av, lambda_v;
-        Av.x = A->x.x * vx + A->x.y * vy + A->x.z * vz;
-        Av.y = A->y.x * vx + A->y.y * vy + A->y.z * vz;
-        Av.z = A->z.x * vx + A->z.y * vy + A->z.z * vz;
+        pseudo_v3d a_v, lambda_v;
+        a_v.x = A->x.x * vx + A->x.y * vy + A->x.z * vz;
+        a_v.y = A->y.x * vx + A->y.y * vy + A->y.z * vz;
+        a_v.z = A->z.x * vx + A->z.y * vy + A->z.z * vz;
         lambda_v.x = lam * vx;
         lambda_v.y = lam * vy;
         lambda_v.z = lam * vz;
 
         printf("Eigenpair %d:\n", i + 1);
-        printf("A * v = %8.4Lf %8.4Lf %8.4Lf\n", Av.x, Av.y, Av.z);
+        printf("A * v = %8.4Lf %8.4Lf %8.4Lf\n", a_v.x, a_v.y, a_v.z);
         printf("λ * v = %8.4Lf %8.4Lf %8.4Lf\n", lambda_v.x, lambda_v.y, lambda_v.z);
 
-        if (fabsl(Av.x - lambda_v.x) > EPSILON ||
-            fabsl(Av.y - lambda_v.y) > EPSILON ||
-            fabsl(Av.z - lambda_v.z) > EPSILON) {
+        if (fabsl(a_v.x - lambda_v.x) > EPSILON ||
+            fabsl(a_v.y - lambda_v.y) > EPSILON ||
+            fabsl(a_v.z - lambda_v.z) > EPSILON) {
             printf("Mismatch for eigenpair %d\n", i + 1);
         }
         printf("Verification A * v = λ * v for each eigenpair done. See the messages above!\n\n");
