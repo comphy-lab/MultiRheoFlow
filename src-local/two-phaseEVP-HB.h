@@ -102,8 +102,7 @@ event tracer_advection (i++) {
 #endif
 
 #if TREE
-  sf.prolongation = refine_bilinear;
-  sf.dirty = true; // boundary conditions need to be updated
+  set_prolongation (sf, refine_bilinear);
 #endif
 }
 
@@ -139,7 +138,6 @@ event properties (i++) {
   }
 
 #if TREE
-  sf.prolongation = fraction_refine;
-  sf.dirty = true; // boundary conditions need to be updated
+  set_prolongation (sf, fraction_refine);
 #endif
 }

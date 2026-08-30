@@ -101,7 +101,7 @@ Sets domain parameters, material properties, and launches the run.
 */
 int main(int argc, char const *argv[]) {
 
-  dtmax = 1e-5;
+  DT = 1e-5;
 
   // Values taken from the terminal
   max_level = 8;
