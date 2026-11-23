@@ -63,6 +63,7 @@ import inspect
 import os, subprocess, re, shutil, argparse, html, json
 from pathlib import Path
 from typing import Dict, List, Tuple
+from urllib.parse import quote
 try:
     from nbconvert import HTMLExporter
     NBCONVERT_AVAILABLE = True
@@ -71,7 +72,7 @@ except ImportError:
     print("Warning: nbconvert not available. Falling back to nbviewer embedding.")
 
 try:
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup, NavigableString, Tag
     BS4_AVAILABLE = True
 except ImportError:
     BS4_AVAILABLE = False
@@ -484,6 +485,105 @@ def process_params_file(file_path: Path) -> str:
         # Use 'ini' syntax highlighting for key=value configuration files
         return f"# {file_path.name}\n\n```ini\n{content}\n```"
 
+NOTEBOOK_STATIC_TAGS = frozenset({
+    "a", "abbr", "b", "blockquote", "br", "caption", "code", "dd", "del",
+    "div", "dl", "dt", "em", "figcaption", "figure", "h1", "h2", "h3",
+    "h4", "h5", "h6", "hr", "i", "img", "kbd", "li", "main", "ol", "p", "pre",
+    "s", "samp", "small", "span", "strong", "sub", "sup", "table", "tbody",
+    "td", "tfoot", "th", "thead", "tr", "ul", "var",
+})
+RASTER_DATA_URL = re.compile(r"data:image/(?:png|jpeg|gif|webp);base64,[a-zA-Z0-9+/=]+")
+
+
+NOTEBOOK_VOID_TAGS = frozenset({"br", "hr", "img"})
+NOTEBOOK_MAX_DEPTH = 100
+
+
+def _notebook_text(value: str) -> str:
+    """Escape text so it can only ever be text, in HTML and in the raw fence."""
+    value = "".join(ch for ch in value if ch in "\n\t" or ord(ch) >= 32)
+    return html.escape(value, quote=True).replace(chr(96), "&#96;")
+
+
+def _notebook_attributes(tag) -> str:
+    allowed = {"class", "title"}
+    if tag.name in {"td", "th"}:
+        allowed.update({"colspan", "rowspan", "scope"})
+    if tag.name == "img":
+        allowed.add("alt")
+        src = tag.attrs.get("src", "")
+        if isinstance(src, str) and RASTER_DATA_URL.fullmatch(src):
+            # Links are static text and nothing external is requested; only
+            # inline raster figures survive.
+            allowed.add("src")
+    parts = []
+    for name in sorted(allowed & set(tag.attrs)):
+        value = tag.attrs[name]
+        if isinstance(value, (list, tuple)):
+            value = " ".join(str(item) for item in value)
+        parts.append(f' {name}="{_notebook_text(str(value))}"')
+    return "".join(parts)
+
+
+def safe_notebook_preview(rendered: str) -> str:
+    """Publish static notebook output only; fail closed without a parser.
+
+    The parsed tree is never serialised by the parser. Output is rebuilt from
+    scratch: an element is written only when its name is on the allow-list, with
+    allow-listed attributes, and every text node is entity-escaped. Comments,
+    CDATA, declarations, processing instructions and every other node type are
+    dropped, as is any element not on the list together with its content. The
+    list has no raw-text, foreign-content or template elements, so a browser
+    reading the result cannot find markup the parser here did not see.
+    """
+    if not BS4_AVAILABLE:
+        return ""
+    soup = BeautifulSoup(rendered, "html.parser")
+    fragment = soup.find("div", id="notebook-container")
+    if fragment is None:
+        fragment = soup.find("body")
+    if fragment is None:
+        return ""
+    out = []
+    # Explicit stack: hostile nesting must not exhaust recursion. An entry is
+    # a node with its depth, or a closing tag (depth None) written here.
+    stack = [(child, 1) for child in reversed(list(fragment.children))]
+    while stack:
+        node, depth = stack.pop()
+        if depth is None:
+            out.append(node)
+        elif isinstance(node, Tag):
+            if node.name not in NOTEBOOK_STATIC_TAGS or depth > NOTEBOOK_MAX_DEPTH:
+                continue
+            out.append(f"<{node.name}{_notebook_attributes(node)}>")
+            if node.name not in NOTEBOOK_VOID_TAGS:
+                stack.append((f"</{node.name}>", None))
+                stack.extend((child, depth + 1) for child in reversed(list(node.children)))
+        elif type(node) is NavigableString:
+            # Exact type: Comment, CData, Doctype and the rest are subclasses.
+            out.append(_notebook_text(str(node)))
+    return "".join(out)
+
+
+def inert_notebook_text(value: str) -> str:
+    """Render notebook-supplied text as one line of plain text.
+
+    The text is used both in raw HTML and in a Markdown heading, where pandoc
+    would read braces as heading attributes, brackets as links and backticks as
+    a fence. Every ASCII character that is not a letter, digit or space is
+    written as a numeric character reference, which is text in both places.
+    """
+    text = "".join(ch for ch in " ".join(value.split()) if ord(ch) >= 32)
+    return "".join(ch if ch == " " or ch.isalnum() or ord(ch) > 126 else f"&#{ord(ch)};"
+                   for ch in text)
+
+
+def seo_metadata_comment(metadata: dict) -> str:
+    """Serialise metadata so no value can end the surrounding HTML comment."""
+    encoded = json.dumps(metadata).replace("<", "\\u003c").replace(">", "\\u003e")
+    return f"<!--SEO_METADATA:{encoded}-->"
+
+
 def process_jupyter_notebook(file_path: Path) -> str:
     """
     Generates an HTML snippet to embed a Jupyter notebook with preview, download, and external viewing options.
@@ -505,7 +605,9 @@ def process_jupyter_notebook(file_path: Path) -> str:
         rel_path = file_path.relative_to(REPO_ROOT).parent
         notebook_path = notebook_filename if rel_path.as_posix() == '.' else f"{rel_path}/{notebook_filename}"
             
-        notebook_title = notebook_filename
+        safe_filename_link = quote(notebook_filename, safe="")
+        notebook_path = quote(notebook_path, safe="/")
+        notebook_title = " ".join(notebook_filename.split())
         notebook_description = ""
         notebook_features = []
         
@@ -546,9 +648,9 @@ def process_jupyter_notebook(file_path: Path) -> str:
         if len(meta_safe_description) > 160:
             meta_safe_description = meta_safe_description[:157] + "..."
         
-        safe_notebook_title = html.escape(notebook_title)
-        safe_notebook_description = html.escape(notebook_description)
-        safe_notebook_features = [html.escape(f) for f in notebook_features]
+        safe_notebook_title = inert_notebook_text(notebook_title)
+        safe_notebook_description = inert_notebook_text(notebook_description)
+        safe_notebook_features = [inert_notebook_text(f) for f in notebook_features]
         features_html = "\n".join([f'<li>{feature}</li>' for feature in safe_notebook_features])
         
         seo_metadata = {
@@ -568,32 +670,9 @@ def process_jupyter_notebook(file_path: Path) -> str:
                 # Convert notebook to HTML
                 (body, resources) = html_exporter.from_filename(str(file_path))
                 
-                # Extract just the notebook content (remove full HTML structure)
-                # We'll embed this within our existing page structure
-                if BS4_AVAILABLE:
-                    soup = BeautifulSoup(body, 'html.parser')
-                    
-                    # Find the main notebook container
-                    notebook_container = soup.find('div', {'id': 'notebook-container'})
-                    if not notebook_container:
-                        # Fallback to finding the body content
-                        notebook_container = soup.find('body')
-                        if notebook_container:
-                            # Remove script tags from body to avoid conflicts
-                            for script in notebook_container.find_all('script'):
-                                script.decompose()
-                    
-                    if notebook_container:
-                        notebook_html_content = str(notebook_container)
-                        # Wrap in a div with our custom class for styling
-                        notebook_html_content = f'<div class="nbconvert-rendered">{notebook_html_content}</div>'
-                        debug_print(f"Successfully converted notebook {notebook_filename} with nbconvert")
-                    else:
-                        debug_print(f"Could not find notebook container in nbconvert output for {notebook_filename}")
-                else:
-                    # If BeautifulSoup is not available, use the full HTML output
-                    notebook_html_content = f'<div class="nbconvert-rendered">{body}</div>'
-                    debug_print(f"BeautifulSoup not available, using full HTML output for {notebook_filename}")
+                preview = safe_notebook_preview(body)
+                if preview:
+                    notebook_html_content = f'<div class="nbconvert-rendered">{preview}</div>'
                     
             except Exception as e:
                 debug_print(f"Failed to convert notebook {notebook_filename} with nbconvert: {str(e)}")
@@ -609,7 +688,7 @@ def process_jupyter_notebook(file_path: Path) -> str:
     <h2>Jupyter Notebook: {safe_notebook_title}</h2>
     
     <div class="notebook-action-buttons">
-        <a href="{notebook_filename}" download class="notebook-btn download-btn">
+        <a href="{safe_filename_link}" download class="notebook-btn download-btn">
             <i class="fa-solid fa-download"></i> Download Notebook
         </a>
         <a href="https://nbviewer.org/github/{GITHUB_ORG}/{REPO_NAME}/blob/main/{notebook_path}"
@@ -729,7 +808,7 @@ def process_jupyter_notebook(file_path: Path) -> str:
     <h2>Jupyter Notebook: {safe_notebook_title}</h2>
     
     <div class="notebook-action-buttons">
-        <a href="{notebook_filename}" download class="notebook-btn download-btn">
+        <a href="{safe_filename_link}" download class="notebook-btn download-btn">
             <i class="fa-solid fa-download"></i> Download Notebook
         </a>
         <a href="https://nbviewer.org/github/{GITHUB_ORG}/{REPO_NAME}/blob/main/{notebook_path}"
@@ -756,76 +835,16 @@ def process_jupyter_notebook(file_path: Path) -> str:
         <p><strong>Tip:</strong> For the best interactive experience, download the notebook or open it in Google Colab.</p>
     </div>
 
-    <!-- Embedded Jupyter Notebook -->
-    <div class="embedded-notebook">
-        <h3>Notebook Preview</h3>
-        <div id="notebook-container-{notebook_filename.replace('.', '-')}" >
-            <iframe id="notebook-iframe-{notebook_filename.replace('.', '-')}"
-                    src="https://nbviewer.org/github/{GITHUB_ORG}/{REPO_NAME}/blob/main/{notebook_path}"
-                    width="100%" height="800px" frameborder="0"
-                    onload="checkIframeLoaded('{notebook_filename.replace('.', '-')}')"
-                    onerror="handleIframeError('{notebook_filename.replace('.', '-')}')"></iframe>
-            <div id="notebook-error-{notebook_filename.replace('.', '-')}" 
-                 class="notebook-error-message" style="display: none;">
-                <div class="error-container">
-                    <i class="fa-solid fa-exclamation-triangle"></i>
-                    <h4>Notebook Preview Unavailable</h4>
-                    <p>The notebook preview could not be loaded. This may be because:</p>
-                    <ul>
-                        <li>The notebook file is not yet available in the repository</li>
-                        <li>The nbviewer service is temporarily unavailable</li>
-                        <li>The repository is private or has access restrictions</li>
-                    </ul>
-                    <p>You can still download the notebook using the button above or view it directly through one of the external services.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <p>Static preview is unavailable. Use one of the explicit links above.</p>
 </div>
 
-<script>
-    function checkIframeLoaded(id) {{
-        try {{
-            const iframe = document.getElementById('notebook-iframe-' + id);
-            const iframeContent = iframe.contentWindow || iframe.contentDocument;
-            try {{
-                if (iframeContent.document.title.includes('404') || 
-                    iframeContent.document.body.textContent.includes('404 Not Found')) {{
-                    handleIframeError(id);
-                }}
-            }} catch (e) {{}}
-        }} catch (e) {{
-            handleIframeError(id);
-        }}
-    }}
-    
-    function handleIframeError(id) {{
-        const iframe = document.getElementById('notebook-iframe-' + id);
-        const errorDiv = document.getElementById('notebook-error-' + id);
-        
-        if (iframe && errorDiv) {{
-            iframe.style.display = 'none';
-            errorDiv.style.display = 'block';
-        }}
-    }}
-    
-    document.addEventListener('DOMContentLoaded', function() {{
-        const iframes = document.querySelectorAll('iframe[id^="notebook-iframe-"]');
-        iframes.forEach(iframe => {{
-            iframe.addEventListener('load', function() {{
-                const id = iframe.id.replace('notebook-iframe-', '');
-                setTimeout(function() {{ checkIframeLoaded(id); }}, 1000);
-            }});
-        }});
-    }});
-</script>
 ```
 """
         # Add metadata to the embed_html for extraction later
-        embed_html = f"<!--SEO_METADATA:{json.dumps(seo_metadata)}-->\n" + embed_html
+        embed_html = seo_metadata_comment(seo_metadata) + "\n" + embed_html
         return embed_html
     except Exception as e:
-        return f"# {notebook_filename}\n\nError processing notebook: {str(e)}"
+        return "# Notebook\n\nStatic preview is unavailable."
 
 def process_python_file(file_path: Path) -> str:
     """
