@@ -512,9 +512,13 @@ def _notebook_attributes(tag) -> str:
     if tag.name == "img":
         allowed.add("alt")
         src = tag.attrs.get("src", "")
+        if isinstance(src, str):
+            # Notebooks store base64 with line breaks, which a data URL ignores.
+            src = "".join(src.split())
         if isinstance(src, str) and RASTER_DATA_URL.fullmatch(src):
             # Links are static text and nothing external is requested; only
             # inline raster figures survive.
+            tag.attrs["src"] = src
             allowed.add("src")
     parts = []
     for name in sorted(allowed & set(tag.attrs)):
@@ -545,6 +549,7 @@ def safe_notebook_preview(rendered: str) -> str:
     if fragment is None:
         return ""
     out = []
+    visible = False
     # Explicit stack: hostile nesting must not exhaust recursion. An entry is
     # a node with its depth, or a closing tag (depth None) written here.
     stack = [(child, 1) for child in reversed(list(fragment.children))]
@@ -555,14 +560,18 @@ def safe_notebook_preview(rendered: str) -> str:
         elif isinstance(node, Tag):
             if node.name not in NOTEBOOK_STATIC_TAGS or depth > NOTEBOOK_MAX_DEPTH:
                 continue
-            out.append(f"<{node.name}{_notebook_attributes(node)}>")
+            attributes = _notebook_attributes(node)
+            visible = visible or (node.name == "img" and " src=" in attributes)
+            out.append(f"<{node.name}{attributes}>")
             if node.name not in NOTEBOOK_VOID_TAGS:
                 stack.append((f"</{node.name}>", None))
                 stack.extend((child, depth + 1) for child in reversed(list(node.children)))
         elif type(node) is NavigableString:
             # Exact type: Comment, CData, Doctype and the rest are subclasses.
+            visible = visible or bool(str(node).strip())
             out.append(_notebook_text(str(node)))
-    return "".join(out)
+    # Empty wrappers are not a preview; the caller then shows the notice.
+    return "".join(out) if visible else ""
 
 
 def inert_notebook_text(value: str) -> str:
@@ -588,7 +597,7 @@ def process_jupyter_notebook(file_path: Path) -> str:
     """
     Generates an HTML snippet to embed a Jupyter notebook with preview, download, and external viewing options.
     
-    Uses nbconvert to render the notebook locally if available, otherwise falls back to nbviewer embedding.
+    Uses nbconvert to render the notebook locally if available, otherwise shows a static notice with explicit links.
     Extracts metadata from the first markdown cell and provides interactive elements.
     
     Args:
@@ -663,8 +672,13 @@ def process_jupyter_notebook(file_path: Path) -> str:
         notebook_html_content = ""
         if NBCONVERT_AVAILABLE:
             try:
-                # Configure the HTML exporter
-                html_exporter = HTMLExporter()
+                # Prefer a raster figure where an output also carries SVG,
+                # which the static preview does not publish.
+                from traitlets.config import Config
+                html_exporter = HTMLExporter(config=Config({"NbConvertBase": {
+                    "display_data_priority": [
+                        "text/html", "image/png", "image/jpeg", "image/svg+xml",
+                        "text/latex", "text/markdown", "text/plain"]}}))
                 html_exporter.template_name = 'classic'
                 
                 # Convert notebook to HTML
@@ -673,9 +687,11 @@ def process_jupyter_notebook(file_path: Path) -> str:
                 preview = safe_notebook_preview(body)
                 if preview:
                     notebook_html_content = f'<div class="nbconvert-rendered">{preview}</div>'
+                else:
+                    print(f"  Warning: no static preview produced for {notebook_filename}")
                     
             except Exception as e:
-                debug_print(f"Failed to convert notebook {notebook_filename} with nbconvert: {str(e)}")
+                print(f"  Warning: nbconvert failed for {notebook_filename}: {type(e).__name__}: {e}")
                 notebook_html_content = ""
         
         # Generate the embed HTML
@@ -800,7 +816,7 @@ def process_jupyter_notebook(file_path: Path) -> str:
 ```
 """
         else:
-            # Fallback to nbviewer iframe (original implementation)
+            # Fallback: a static notice and explicit links, no embedded frame
             embed_html = f"""# {safe_notebook_title}
 
 ```{{=html}}
@@ -844,6 +860,8 @@ def process_jupyter_notebook(file_path: Path) -> str:
         embed_html = seo_metadata_comment(seo_metadata) + "\n" + embed_html
         return embed_html
     except Exception as e:
+        # The page stays generic; the cause goes to the build log only.
+        print(f"  Warning: notebook page failed for {file_path}: {type(e).__name__}: {e}")
         return "# Notebook\n\nStatic preview is unavailable."
 
 def process_python_file(file_path: Path) -> str:
